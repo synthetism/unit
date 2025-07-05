@@ -10,7 +10,8 @@
  * - They're discoverable and self-documenting
  * - Minimal interface, maximum flexibility
  * 
- * @author Synet Team
+ * @author 0en
+ * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
 
 /**
@@ -29,6 +30,9 @@ export interface UnitSchema {
 
 /**
  * Core Unit interface - all units must implement this
+ * 
+ * Units that exist are always valid. Invalid units return null from create().
+ * This forces developers to handle errors upfront and prevents runtime surprises.
  */
 export interface Unit {
   /** Unit DNA/schema */
@@ -42,6 +46,9 @@ export interface Unit {
   
   /** Show help - flexible implementation */
   help(): void;
+  
+  /** Get detailed explanation of current state */
+  explain?(): string;
   
   /** Execute a command (optional - only if unit exposes external commands) */
   execute?<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
