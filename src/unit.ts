@@ -45,6 +45,15 @@ export interface Unit {
   
   /** Execute a command (optional - only if unit exposes external commands) */
   execute?<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
+  
+  /** Share capabilities with other units */
+  teach?(): Record<string, (...args: unknown[]) => unknown>;
+  
+  /** Absorb capabilities from other units */
+  learn?(capabilities: Record<string, (...args: unknown[]) => unknown>[]): void;
+  
+  /** Create evolved unit with new capabilities */
+  evolve?(name: string, additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>): Unit;
 }
 
 /**
