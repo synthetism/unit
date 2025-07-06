@@ -332,7 +332,7 @@ await vault.execute('issueVC',claims);
 - [🎭 Manifesto](./MANIFESTO.md) - *The deeper philosophy*
 - [🏗️ Examples](./examples/)
 - [🧪 Tests](./test/)
-- [0en](0en@synthetism.ai)
+- [0en](mailto:0en@synthetism.ai)
 - [Synthetism](https://synthetism.ai)
 
 ---
