@@ -1,296 +1,340 @@
 # @synet/unit
 
-**The foundational Unit Architecture library for the SYNET ecosystem**
+```
+  _    _       _ _                                          
+ | |  | |     (_) |                                         
+ | |  | |_ __  _| |_                                        
+ | |  | | '_ \| | __|                                       
+ | |__| | | | | | |_  _     _ _            _                
+  \____/\_| |_|_|\__|| |   (_) |          | |               
+      /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___ 
+     / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
+    / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
+   /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
-[![npm version](https://badge.fury.io/js/@synet/unit.svg)](https://badge.fury.io/js/@synet/unit)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+version: 1.0.0
+description:Living Architecture for Conscious Code                                                            
+                                                            
+```
 
-## Overview
+A foundational library for building self-aware, composable software units that can teach, learn, and evolve.
 
-`@synet/unit` provides the core interfaces and patterns for building living, composable units of code in the SYNET ecosystem. Units are self-contained, self-documenting entities that can learn capabilities dynamically and evolve through composition.
+## The Problem
+
+Current software architecture treats components as static, isolated entities. Objects are created, used, and discarded without awareness of their own capabilities or the ability to grow. This leads to:
+
+- **Rigid systems** that can't adapt to changing requirements
+- **Duplicated logic** across components that can't learn from each other
+- **Black box complexity** where components can't explain themselves
+- **Brittle evolution** where changes break existing functionality
+
+## The Solution
+
+Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
 
 ## Key Features
 
-- **🧬 Unit DNA**: Every unit has a schema that defines its identity and capabilities
-- **🔄 Dynamic Capabilities**: Units learn abilities from other units at runtime  
-- **🛡️ Self-Validating**: Units carry their creation status and error information
-- **🏗️ Composable**: Units can teach and learn from each other
-- **📦 Zero Dependencies**: Pure TypeScript with no external dependencies
-- **🎯 Type Safe**: Full TypeScript support with proper error handling
+- **Unit DNA**: Every unit has a schema that defines its identity and capabilities
+- **Dynamic Capabilities**: Units learn abilities from other units at runtime
+- **Self-Validating**: Units carry their creation status and error information
+- **Composable**: Units can teach and learn from each other
+- **Zero Dependencies**: Pure TypeScript with no external dependencies
+- **Type Safe**: Full TypeScript support with proper error handling
 
 ## Architecture Principles
 
 1. **Units are living beings in code** - They have identity, capabilities, and can evolve
-2. **Dynamic capabilities over fixed commands** - Units learn what they can do  
+2. **Dynamic capabilities over fixed commands** - Units learn what they can do
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
 5. **"Half-native" methods** - Structure defined, implementation learned
 
-## Installation
+## Core Concepts
+
+### DNA-Based Identity
+
+Every Unit carries a schema (DNA) that defines its essential identity:
+
+```typescript
+interface UnitSchema {
+  name: string;           // Identity
+  version: string;        // Evolution state
+  parent?: UnitSchema;    // Lineage tracking
+}
+```
+
+### Conscious Capabilities
+
+Units know what they can do and can share that knowledge:
+
+```typescript
+interface Unit {
+  capabilities(): string[];                    // What can I do?
+  teach(): Record<string, Function>;          // Here's how to do it
+  learn(capabilities: Record<string, Function>[]): void;  // I'll learn this
+  evolve(name: string, additionalCaps?: Record<string, Function>): Unit;
+}
+```
+
+### Evolution with Memory
+
+Units can transcend their current form while preserving their lineage:
+
+```typescript
+const enhanced = unit.evolve('enhanced-unit', {
+  newCapability: () => 'I have grown beyond my original design'
+});
+
+// Evolution preserves history
+console.log(enhanced.dna.parent?.name);    // Original unit name
+console.log(enhanced.dna.parent?.version); // Original version
+```
+
+## Quick Start
+
+### Installation
 
 ```bash
 npm install @synet/unit
 ```
 
-## Quick Start
-
-### Basic Unit Creation
+### Basic Usage
 
 ```typescript
 import { BaseUnit, createUnitSchema } from '@synet/unit';
 
-class GreetingUnit extends BaseUnit {
-  constructor(name: string) {
+class CalculatorUnit extends BaseUnit {
+  private constructor() {
     super(createUnitSchema({
-      name: 'greeting-unit',
-      version: '1.0.0', 
-      commands: ['greet', 'farewell'],
-      description: 'A unit that can greet people'
+      name: 'calculator-unit',
+      version: '1.0.0'
     }));
-
-    // Set up initial capabilities
-    this._addCapability('greet', this.greet.bind(this));
-    this._addCapability('farewell', this.farewell.bind(this));
+  
+    this._addCapability('add', this.addImpl.bind(this));
+    this._addCapability('multiply', this.multiplyImpl.bind(this));
   }
-
+  
+  static create(): CalculatorUnit {
+    return new CalculatorUnit();
+  }
+  
   whoami(): string {
-    return `GreetingUnit - I can greet people!`;
+    return `CalculatorUnit[${this.dna.name}@${this.dna.version}]`;
   }
-
-  help(): void {
-    console.log('I can greet and say farewell to people.');
-    console.log(`Available commands: ${this.getCapabilities().join(', ')}`);
-  }
-
-  private greet(name: string): string {
-    return `Hello, ${name}!`;
-  }
-
-  private farewell(name: string): string {
-    return `Goodbye, ${name}!`;
-  }
-
-  // Public API
-  getCapabilities(): string[] {
+  
+  capabilities(): string[] {
     return this._getAllCapabilities();
   }
-}
-
-// Usage
-const greeter = new GreetingUnit('friendly-bot');
-console.log(greeter.whoami());
-greeter.help();
-
-if (greeter.capableOf('greet')) {
-  const message = await greeter.execute('greet', 'Alice');
-  console.log(message); // "Hello, Alice!"
-}
-```
-
-### Self-Validating Units
-
-```typescript
-class CryptoUnit extends BaseUnit {
-  private constructor(algorithm: string) {
-    super(createUnitSchema({
-      name: 'crypto-unit',
-      version: '1.0.0',
-      commands: ['hash', 'verify'],
-      description: 'Cryptographic operations unit'
-    }));
-
-    // Validate algorithm
-    if (!['SHA-256', 'SHA-512'].includes(algorithm)) {
-      this._markFailed(`Unsupported algorithm: ${algorithm}`);
-      return;
-    }
-
-    // Setup successful
-    this._addCapability('hash', this.hash.bind(this));
+  
+  teach(): Record<string, Function> {
+    return {
+      add: this.addImpl.bind(this),
+      multiply: this.multiplyImpl.bind(this)
+    };
   }
-
-  static create(algorithm: string): CryptoUnit {
-    return new CryptoUnit(algorithm);
-  }
-
-  whoami(): string {
-    return this.created ? 'CryptoUnit[ready]' : `CryptoUnit[failed: ${this.error}]`;
-  }
-
+  
   help(): void {
-    if (!this.created) {
-      console.log(`❌ Unit failed: ${this.error}`);
-      return;
-    }
-    console.log('🔐 I can perform cryptographic operations');
+    console.log(`I can: ${this.capabilities().join(', ')}`);
   }
-
-  private hash(data: string): string {
-    // Implementation here
-    return `hash-${data}`;
+  
+  private addImpl(a: number, b: number): number {
+    return a + b;
   }
-}
-
-// Usage with error handling
-const crypto = CryptoUnit.create('SHA-256');
-if (crypto.created) {
-  console.log('✅ Crypto unit ready');
-  crypto.help();
-} else {
-  console.log(`❌ Failed: ${crypto.error}`);
-}
-```
-
-### "Half-Native" Method Pattern
-
-This pattern allows you to define clean APIs that become operational only when capabilities are learned:
-
-```typescript
-class KeyUnit extends BaseUnit {
-  // Clean API method
-  async sign(data: string): Promise<string> {
-    if (!this.created) {
-      throw new Error(`Cannot sign: ${this.error}`);
-    }
-
-    if (!this.capableOf('sign')) {
-      throw new Error('Cannot sign: missing signing capability. Learn from a crypto unit.');
-    }
-
-    return this.execute<string>('sign', data);
-  }
-
-  // Always available check
-  canSign(): boolean {
-    return this.created && this.capableOf('sign');
+  
+  private multiplyImpl(a: number, b: number): number {
+    return a * b;
   }
 }
 
 // Usage
-const key = KeyUnit.create('RSA', 2048);
-
-// Before learning - throws helpful error
-try {
-  await key.sign('data'); // Throws: "missing signing capability" 
-} catch (error) {
-  console.log(error.message);
-}
-
-// After learning from crypto provider
-key.learn?.([cryptoProvider.teach?.() || {}]);
-await key.sign('data'); // Works!
+const calc = CalculatorUnit.create();
+console.log(calc.whoami());              // CalculatorUnit[calculator-unit@1.0.0]
+console.log(calc.capabilities());        // ['add', 'multiply']
+await calc.execute('add', 5, 3);        // 8
 ```
 
-## Core Interfaces
-
-### Unit
+### Unit Composition
 
 ```typescript
-interface Unit {
-  readonly dna: UnitSchema;
-  readonly created: boolean;
-  readonly error?: string;
-  readonly stack?: string[];
-  
-  whoami(): string;
-  capableOf(command: string): boolean;
-  help(): void;
-  explain?(): string;
-  execute?<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
-  teach?(): Record<string, (...args: unknown[]) => unknown>;
-  learn?(capabilities: Record<string, (...args: unknown[]) => unknown>[]): void;
-  evolve?(name: string, additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>): Unit;
-}
+// Units can learn from each other
+const mathUnit = MathUnit.create();
+const statsUnit = StatsUnit.create();
+
+// Stats unit learns math capabilities
+statsUnit.learn([mathUnit.teach()]);
+
+// Now stats unit can do math operations
+await statsUnit.execute('add', 10, 20);  // 30
 ```
 
-### UnitSchema
+### Evolution
 
 ```typescript
-interface UnitSchema {
-  readonly name: string;
-  readonly version: string;
-  readonly commands: readonly string[];
-  readonly description?: string;
-}
+// Evolution preserves identity while enabling growth
+const basicUnit = CalculatorUnit.create();
+const advancedUnit = basicUnit.evolve('scientific-calculator', {
+  sin: (x: number) => Math.sin(x),
+  cos: (x: number) => Math.cos(x)
+});
+
+// Lineage is preserved
+console.log(advancedUnit.dna.parent?.name); // 'calculator-unit'
+console.log(advancedUnit.capabilities());   // ['add', 'multiply', 'sin', 'cos']
 ```
 
-## Best Practices
+## Key Features
 
-### 1. Always Check Creation Status
+### **Self-Awareness**
+
+Units know their own capabilities and can explain themselves:
 
 ```typescript
-const unit = SomeUnit.create(params);
-if (!unit.created) {
-  console.error(`Failed to create unit: ${unit.error}`);
-  return;
-}
-// Safely use unit
+unit.whoami();        // Identity
+unit.capabilities();  // What I can do
+unit.help();         // How to use me
 ```
 
-### 2. Use "Half-Native" Methods for Clean APIs
+### **Conscious Teaching**
+
+Units explicitly choose what to share:
 
 ```typescript
-class MyUnit extends BaseUnit {
-  // Define clean API
-  async doSomething(): Promise<string> {
-    if (!this.capableOf('operation')) {
-      throw new Error('Missing required capability');
-    }
-    return this.execute('operation');
-  }
+// Explicit public API
+teach(): Record<string, Function> {
+  return {
+    publicMethod: this.publicImpl.bind(this),
+    // privateMethod NOT shared - conscious choice
+  };
 }
 ```
 
-### 3. Compose Units Through Learning
+### **Dynamic Learning**
+
+Units can acquire new capabilities at runtime:
 
 ```typescript
-function composeUnits(learner: Unit, teacher: Unit): boolean {
-  if (!learner.created || !teacher.created) {
-    return false;
-  }
-  
-  const capabilities = teacher.teach?.();
-  if (capabilities) {
-    learner.learn?.([capabilities]);
-    return true;
-  }
-  return false;
-}
+unit.learn([
+  cryptoUnit.teach(),  // Learn cryptographic capabilities
+  networkUnit.teach()  // Learn network capabilities
+]);
 ```
 
-## Philosophy
+### **Traceable Evolution**
 
-The Unit Architecture embodies these principles:
+Evolution preserves complete lineage:
 
-- **Living Code**: Units aren't just objects; they're digital entities with identity, capabilities, and evolution
-- **Dynamic Growth**: Capabilities are learned, not inherited, enabling runtime adaptation
-- **Safe Composition**: Units can safely share capabilities without fragile inheritance chains  
-- **Self-Documentation**: Every unit knows what it can do and can explain itself
-- **Error Resilience**: Failed creation is handled gracefully without exceptions
+```typescript
+// Multi-generational evolution
+const gen1 = BasicUnit.create();
+const gen2 = gen1.evolve('enhanced-unit');
+const gen3 = gen2.evolve('super-unit');
 
-## Examples
+// Trace lineage
+console.log(gen3.dna.parent?.parent?.name); // BasicUnit
+```
 
-See the `/units/units-born/` directory for complete examples:
+## Architecture Benefits
 
-- **KeyUnit**: Cryptographic operations with learned capabilities
-- **CredentialUnit**: W3C Verifiable Credentials with dynamic crypto learning
-- **ConsciousnessUnit**: Advanced composition and evolution patterns
+### **Composability**
 
-## Integration with SYNET Ecosystem
+Units can be combined in unlimited ways without coupling:
 
-This package serves as the foundation for:
+```typescript
+const composedUnit = BaseUnit.create();
+composedUnit.learn([
+  authUnit.teach(),
+  cryptoUnit.teach(),
+  storageUnit.teach()
+]);
+```
 
-- `@synet/keys` - Cryptographic key management
-- `@synet/vault` - Secure data storage  
-- `@synet/identity` - Digital identity management
-- `@synet/credentials` - Verifiable credentials
-- `@synet/net` - Network communication
-- `@synet/alpha` - Advanced consciousness and AI capabilities
+### **Evolvability**
 
-## License
+Systems can adapt without breaking existing functionality:
 
-MIT - see [LICENSE](./LICENSE) file for details.
+```typescript
+// Safe evolution - old interface preserved
+const v2 = legacyUnit.evolve('modern-unit', {
+  newFeature: () => 'Enhanced functionality'
+});
+```
+
+### **Testability**
+
+Units can explain and validate themselves:
+
+```typescript
+// Units are self-documenting
+unit.help();
+unit.explain();
+expect(unit.created).toBe(true);
+expect(unit.capableOf('encrypt')).toBe(true);
+```
+
+### **Debuggability**
+
+Clear visibility into unit state and capabilities:
+
+```typescript
+console.log(unit.whoami());          // Identity
+console.log(unit.capabilities());    // Current abilities
+console.log(unit.dna.parent?.name);  // Evolution history
+```
+
+## The Vision
+
+Units represent the future of software architecture - components that are not just functional, but conscious. They know themselves, can teach others, learn continuously, and evolve while maintaining their essential identity.
+
+This is the foundation of the Synet ecosystem, where every component is a living, breathing unit of conscious software.
 
 ---
 
-**Built with ❤️ by the SYNET Team**
+## The Synet Stack
+
+Units are the foundation for a complete ecosystem of conscious software components:
+
+```typescript
+// Identity that knows itself
+const identity = await IdentityUnit.create('0en');
+
+// Keys that understand their purpose, private key is protected  
+const key = await KeyUnit.create('Ed25519');
+
+// Credentials that validate themselves
+const credential = await CredentialUnit.create(claims);
+
+// Credential learned to sign, without access to Private Key
+credential.learn(key.teach());
+
+// Credential can sign now, using Key inherited capability
+credential.execute('sign'); 
+
+// Vaults that protect consciously
+const vault = await VaultUnit.create(identity);
+
+// Vault learns how to issue Verifiable Credentials and also sign with Key capability.
+vault.learn(credential.teach())
+
+// Vault can issue VC and sign, all without knowing private key. Key signs.  
+await vault.execute('issueVC',claims);
+
+```
+
+*Each line: a conscious entity. Each component: self-aware. Each system: alive.*
+
+**Welcome to conscious software architecture. Welcome to the Synet.**
+
+---
+
+### Links
+
+- [📖 Technical Documentation](./docs/)
+- [🎭 Manifesto](./MANIFESTO.md) - *The deeper philosophy*
+- [🏗️ Examples](./examples/)
+- [🧪 Tests](./test/)
+- [0en](0en@synthetism.ai)
+- [Synthetism](https://synthetism.ai)
+
+---
+
+*Built with consciousness. Designed for evolution. The code is alive.*
