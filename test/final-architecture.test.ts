@@ -3,15 +3,18 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import type { Unit, UnitSchema } from '../src';
+
+
+
+import type { IUnit, UnitSchema } from '../src';
 import {
-  BaseUnit,
+  Unit,
   createUnitSchema,
   validateUnitSchema,
 } from '../src';
 
 // Test implementation using new architecture
-class TestUnit extends BaseUnit {
+class TestUnit extends Unit {
   private constructor(name: string) {
     super(createUnitSchema({
       name: 'test-unit',
@@ -212,7 +215,7 @@ describe('@synet/unit Final Architecture', () => {
   describe('Error Handling with string errors', () => {
     it('should use string errors for simplicity', () => {
       // Create a unit that fails validation
-      class FailingUnit extends BaseUnit {
+      class FailingUnit extends Unit {
         constructor() {
           super(createUnitSchema({
             name: 'failing-unit',

@@ -1,20 +1,20 @@
 # @synet/unit
 
 ```
-  _    _       _ _                                        
- | |  | |     (_) |                                       
- | |  | |_ __  _| |_                                      
- | |  | | '_ \| | __|                                     
- | |__| | | | | | |_  _     _ _            _              
-  \____/\_| |_|_|\__|| |   (_) |          | |             
+  _    _       _ _                              
+ | |  | |     (_) |                             
+ | |  | |_ __  _| |_                            
+ | |  | | '_ \| | __|                           
+ | |__| | | | | | |_  _     _ _            _    
+  \____/\_| |_|_|\__|| |   (_) |          | |   
       /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___ 
      / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
-version: 1.0.0
-description:Living Architecture for Conscious Code                                                          
-                                                          
+version: 1.0.2
+description:Living Architecture for Conscious Code                                                
+                                                
 ```
 
 A foundational library for building self-aware, composable software units that can teach, learn, and evolve.
@@ -48,36 +48,37 @@ Units are living architectural entities that know themselves, can teach others, 
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
 5. **"Half-native" methods** - Structure defined, implementation learned
-6. **⚠️ Static create() pattern is mandatory** - No direct constructor calls allowed
+6. **Static create() pattern is always entry point** - Constructor is private
 
-## ⚠️ CRITICAL: Unit Creation Pattern
+## Unit Creation Pattern
 
 **ALL units must follow the private constructor + static create() pattern.**
 
-This architectural requirement is **mandatory** and **non-negotiable**:
-
 ```typescript
 class MyUnit extends BaseUnit {
-  // ✅ MUST: Private constructor
+  //  Private constructor
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
     // Setup capabilities...
   }
 
-  // ✅ MUST: Static create() as the only entry point
+  // Static create() as the only entry point
   static create(data: MyData): MyUnit {
+
+    // validation of data
+
     return new MyUnit(data);
   }
 }
 
-// ✅ CORRECT: Use static create()
+// ✅ OK: Use static create()
 const unit = MyUnit.create(data);
 
-// ❌ FORBIDDEN: Direct constructor calls
+// ❌ FAIL: Direct constructor calls
 // const unit = new MyUnit(data); // Won't work - constructor is private
 ```
 
-**Why this pattern is enforced:**
+**Why this pattern is important:**
 
 - **Prevents invalid unit states** - Validation happens in create()
 - **Enables proper lifecycle management** - Controlled creation process
@@ -98,12 +99,12 @@ interface UnitSchema {
 }
 ```
 
-### Conscious Capabilities
+### Capability Acquisition
 
 Units know what they can do and can share that knowledge:
 
 ```typescript
-interface Unit {
+interface IUnit {
   capabilities(): string[];                    // What can I do?
   teach(): Record<string, Function>;          // Here's how to do it
   learn(capabilities: Record<string, Function>[]): void;  // I'll learn this
@@ -139,7 +140,8 @@ npm install @synet/unit
 import { BaseUnit, createUnitSchema } from '@synet/unit';
 
 class CalculatorUnit extends BaseUnit {
-  // ⚠️ CRITICAL: Constructor must be private
+  
+  // Private constructor
   private constructor() {
     super(createUnitSchema({
       name: 'calculator-unit',
@@ -150,7 +152,7 @@ class CalculatorUnit extends BaseUnit {
     this._addCapability('multiply', this.multiplyImpl.bind(this));
   }
   
-  // ⚠️ CRITICAL: Static create() is the ONLY supported entry point
+  // Static create() 
   static create(): CalculatorUnit {
     return new CalculatorUnit();
   }
@@ -182,13 +184,6 @@ class CalculatorUnit extends BaseUnit {
     return a * b;
   }
 }
-
-// ✅ CORRECT: Use static create() method
-const calc = CalculatorUnit.create();
-
-// ❌ WRONG: Direct constructor calls are not allowed
-// const calc = new CalculatorUnit(); // This won't work - constructor is private
-```
 
 console.log(calc.whoami());              // CalculatorUnit[calculator-unit@1.0.0]
 console.log(calc.capabilities());        // ['add', 'multiply']

@@ -36,7 +36,7 @@ export interface UnitSchema {
  * They use dynamic capabilities instead of fixed commands.
  * Invalid units can still exist but report their failure state.
  */
-export interface Unit {
+export interface IUnit {
   /** Unit DNA/schema */
   readonly dna: UnitSchema;
   
@@ -74,18 +74,18 @@ export interface Unit {
   learn(capabilities: Record<string, (...args: unknown[]) => unknown>[]): void;
   
   /** Create evolved unit with new capabilities */
-  evolve(name: string, additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>): Unit;
+  evolve(name: string, additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>): IUnit;
 }
 
 /**
  * Unit creation result - handles success/failure of unit creation
  */
-export type UnitResult<T extends Unit> = T | null;
+export type UnitResult<T extends IUnit> = T | null;
 
 /**
  * Unit factory interface - all unit classes should implement this
  */
-export interface UnitFactory<T extends Unit> {
+export interface UnitFactory<T extends IUnit> {
   /** 
    * Create a new unit instance with validation
    * Returns null if creation fails, forcing error handling upfront
@@ -127,7 +127,7 @@ export abstract class ValueObject<T> {
  * 
  * Example:
  * ```typescript
- * class MyUnit extends BaseUnit {
+ * class MyUnit extends Unit {
  *   private constructor(data: MyData) {
  *     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
  *     // Setup capabilities...
@@ -139,7 +139,7 @@ export abstract class ValueObject<T> {
  * }
  * ```
  */
-export abstract class BaseUnit implements Unit {
+export abstract class Unit implements IUnit {
   protected _dna: UnitSchema;
   protected _capabilities = new Map<string, (...args: unknown[]) => unknown>();
   protected _created = true;

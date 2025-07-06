@@ -10,12 +10,13 @@
 
 export {
   // Core interfaces
-  type Unit,
+  type IUnit,
   type UnitSchema,
   
   // Base classes
   ValueObject,
-  BaseUnit,
+  Unit,
+  
   
   // Utility functions
   createUnitSchema,
