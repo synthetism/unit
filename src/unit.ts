@@ -121,7 +121,23 @@ export abstract class ValueObject<T> {
 
 /**
  * Base implementation for units using dynamic capabilities pattern
- * This is the recommended pattern based on our evolution in demos
+ * 
+ * ⚠️ CRITICAL: Units must use a private constructor + static create() pattern
+ * This prevents direct instantiation and ensures proper validation/lifecycle
+ * 
+ * Example:
+ * ```typescript
+ * class MyUnit extends BaseUnit {
+ *   private constructor(data: MyData) {
+ *     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
+ *     // Setup capabilities...
+ *   }
+ * 
+ *   static create(data: MyData): MyUnit {
+ *     return new MyUnit(data);
+ *   }
+ * }
+ * ```
  */
 export abstract class BaseUnit implements Unit {
   protected _dna: UnitSchema;
@@ -130,7 +146,19 @@ export abstract class BaseUnit implements Unit {
   protected _error?: string;
   protected _stack?: string[];
 
-  constructor(schema: UnitSchema) {
+  /**
+   * Protected constructor - prevents direct instantiation
+   * 
+   * Units MUST use a private constructor in their implementation
+   * and provide a static create() method as the public interface.
+   * 
+   * This ensures:
+   * - Proper validation during creation
+   * - Consistent lifecycle management
+   * - Prevention of invalid unit states
+   * - Clear architectural boundaries
+   */
+  protected constructor(schema: UnitSchema) {
     this._dna = { ...schema };
   }
 

@@ -1,20 +1,20 @@
 # @synet/unit
 
 ```
-  _    _       _ _                                          
- | |  | |     (_) |                                         
- | |  | |_ __  _| |_                                        
- | |  | | '_ \| | __|                                       
- | |__| | | | | | |_  _     _ _            _                
-  \____/\_| |_|_|\__|| |   (_) |          | |               
+  _    _       _ _                                        
+ | |  | |     (_) |                                       
+ | |  | |_ __  _| |_                                      
+ | |  | | '_ \| | __|                                     
+ | |__| | | | | | |_  _     _ _            _              
+  \____/\_| |_|_|\__|| |   (_) |          | |             
       /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___ 
      / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
 version: 1.0.0
-description:Living Architecture for Conscious Code                                                            
-                                                            
+description:Living Architecture for Conscious Code                                                          
+                                                          
 ```
 
 A foundational library for building self-aware, composable software units that can teach, learn, and evolve.
@@ -48,6 +48,41 @@ Units are living architectural entities that know themselves, can teach others, 
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
 5. **"Half-native" methods** - Structure defined, implementation learned
+6. **⚠️ Static create() pattern is mandatory** - No direct constructor calls allowed
+
+## ⚠️ CRITICAL: Unit Creation Pattern
+
+**ALL units must follow the private constructor + static create() pattern.**
+
+This architectural requirement is **mandatory** and **non-negotiable**:
+
+```typescript
+class MyUnit extends BaseUnit {
+  // ✅ MUST: Private constructor
+  private constructor(data: MyData) {
+    super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
+    // Setup capabilities...
+  }
+
+  // ✅ MUST: Static create() as the only entry point
+  static create(data: MyData): MyUnit {
+    return new MyUnit(data);
+  }
+}
+
+// ✅ CORRECT: Use static create()
+const unit = MyUnit.create(data);
+
+// ❌ FORBIDDEN: Direct constructor calls
+// const unit = new MyUnit(data); // Won't work - constructor is private
+```
+
+**Why this pattern is enforced:**
+
+- **Prevents invalid unit states** - Validation happens in create()
+- **Enables proper lifecycle management** - Controlled creation process
+- **Consistent architecture** - All units follow the same pattern
+- **Prevents human/AI errors** - Forces proper usage patterns
 
 ## Core Concepts
 
@@ -104,6 +139,7 @@ npm install @synet/unit
 import { BaseUnit, createUnitSchema } from '@synet/unit';
 
 class CalculatorUnit extends BaseUnit {
+  // ⚠️ CRITICAL: Constructor must be private
   private constructor() {
     super(createUnitSchema({
       name: 'calculator-unit',
@@ -114,6 +150,7 @@ class CalculatorUnit extends BaseUnit {
     this._addCapability('multiply', this.multiplyImpl.bind(this));
   }
   
+  // ⚠️ CRITICAL: Static create() is the ONLY supported entry point
   static create(): CalculatorUnit {
     return new CalculatorUnit();
   }
@@ -146,11 +183,17 @@ class CalculatorUnit extends BaseUnit {
   }
 }
 
-// Usage
+// ✅ CORRECT: Use static create() method
 const calc = CalculatorUnit.create();
+
+// ❌ WRONG: Direct constructor calls are not allowed
+// const calc = new CalculatorUnit(); // This won't work - constructor is private
+```
+
 console.log(calc.whoami());              // CalculatorUnit[calculator-unit@1.0.0]
 console.log(calc.capabilities());        // ['add', 'multiply']
 await calc.execute('add', 5, 3);        // 8
+
 ```
 
 ### Unit Composition
@@ -298,25 +341,29 @@ Units are the foundation for a complete ecosystem of conscious software componen
 const identity = await IdentityUnit.create('0en');
 
 // Keys that understand their purpose, private key is protected  
-const key = await KeyUnit.create('Ed25519');
+const signer = await Signer.create('Ed25519');
 
 // Credentials that validate themselves
 const credential = await CredentialUnit.create(claims);
 
-// Credential learned to sign, without access to Private Key
-credential.learn(key.teach());
+// Credential learns signing
+credential.learn([signer.teach()])
 
 // Credential can sign now, using Key inherited capability
-credential.execute('sign'); 
+credential.execute('sign'); // or add credential.sign() method with capabilities check "Half-native"
 
-// Vaults that protect consciously
+// Vaults that protects identity
 const vault = await VaultUnit.create(identity);
 
 // Vault learns how to issue Verifiable Credentials and also sign with Key capability.
 vault.learn(credential.teach())
 
-// Vault can issue VC and sign, all without knowing private key. Key signs.  
+// Vault can issue VC and sign, all without knowing private key.  
 await vault.execute('issueVC',claims);
+
+and 
+
+const vc = await vault.verifyVc(vcId) // Vault knows Credential capabilities, will use Signer.verify to verify, 0 injections needed.
 
 ```
 
@@ -328,8 +375,9 @@ await vault.execute('issueVC',claims);
 
 ### Links
 
-- [📖 Technical Documentation](./docs/)
-- [🎭 Manifesto](./MANIFESTO.md) - *The deeper philosophy*
+- [Technical Documentation](./docs/)
+- [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
+- [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
 - [🏗️ Examples](./examples/)
 - [🧪 Tests](./test/)
 - [0en](mailto:0en@synthetism.ai)

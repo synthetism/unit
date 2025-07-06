@@ -7,6 +7,7 @@
 ## Core Interfaces
 
 ### UnitSchema (DNA)
+
 ```typescript
 interface UnitSchema {
   name: string;           // Unit identity
@@ -18,6 +19,7 @@ interface UnitSchema {
 The DNA is pure - no static commands or descriptions. Everything is dynamic through capabilities.
 
 ### Unit Interface
+
 ```typescript
 interface Unit {
   // Identity & Status
@@ -45,14 +47,19 @@ interface Unit {
 
 ## Implementation Patterns
 
-### 1. BaseUnit + Static Factory
+### 1. BaseUnit + Static Factory Pattern
+
+**This is the ONLY supported pattern for creating units:**
+
 ```typescript
 class MyUnit extends BaseUnit {
+  // CRITICAL: Constructor MUST be private
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
     this._addCapability('action', this.actionImpl.bind(this));
   }
   
+  // CRITICAL: Static create() is the ONLY entry point
   static create(data: MyData): MyUnit {
     return new MyUnit(data);
   }
@@ -69,9 +76,25 @@ class MyUnit extends BaseUnit {
     };
   }
 }
+
+// ✅ CORRECT: Use static create()
+const unit = MyUnit.create(data);
+
+// ❌ FORBIDDEN: Direct constructor calls
+// const unit = new MyUnit(data); // Won't work - constructor is private
 ```
 
+**Why this pattern is enforced:**
+
+- **Architectural consistency** - All units follow the same creation pattern
+- **Prevents invalid states** - Validation happens in create() method
+- **Lifecycle control** - Managed creation process
+- **Error prevention** - Stops both human and AI mistakes
+
 ### 2. Conscious Teaching Pattern
+
+Unit can teach own selected capabilities.
+
 ```typescript
 teach(): Record<string, Function> {
   const publicAPI: Record<string, Function> = {};
@@ -88,14 +111,26 @@ teach(): Record<string, Function> {
   // Private methods like _validateKey are NOT shared
   return publicAPI;
 }
+
+const alpha = Alpha.create();
+const beta = Beta.create();
+const gamma = gamma.create();
+
+beta.learn([alpha.teach()]) // Capabilities transfer
+
+gamma.learn([alpha.teach(),beta.teach()]) // Learned from both. 
+
 ```
 
 ### 3. Evolution with Lineage
+
+Unit can evolve in runtime. 
+
 ```typescript
 evolve(name: string, additionalCapabilities?: Record<string, Function>): Unit {
   const newDNA: UnitSchema = {
     name: name,
-    version: this._getNextVersion(),
+    version: this._getNextVersion(), // Patch
     parent: { ...this._dna }  // Preserve lineage
   };
   
@@ -109,11 +144,23 @@ evolve(name: string, additionalCapabilities?: Record<string, Function>): Unit {
   this._dna = newDNA;
   return this;
 }
+
+evolcedUnut.evolve('Evolved Unit',capabilities)
+
+cloud.store(evolcedUnut) // Store new evolved instance in the Unit cloud with specific version. 
+
+// then
+
+cloud.get('unit','1.0.1') // Same Unit instance, with same data and state.
+
 ```
 
 ## Advanced Patterns
 
 ### Unit Composition
+
+Units is an art composition. Thinking in terms of what each Unit can learn from others, and what can teach. Clean separation of concerns, with endless composability and flexibility. 
+
 ```typescript
 // Create specialized units
 const cryptoUnit = CryptoUnit.create();
@@ -134,6 +181,7 @@ console.log(secureApiUnit.capabilities());
 ```
 
 ### Multi-Generation Evolution
+
 ```typescript
 // Generation 1: Basic unit
 const basicUnit = CalculatorUnit.create();
@@ -156,6 +204,9 @@ console.log(scientificUnit.dna.parent?.parent?.name); // 'calculator-unit'
 ```
 
 ### Capability Checking
+
+Execute used to execute non-native capabilities, but also allow unit to expose the capabilities "public API".
+
 ```typescript
 // Safe capability usage
 if (unit.capableOf('encrypt')) {
@@ -167,20 +218,25 @@ const requiredCaps = ['sign', 'verify', 'encrypt'];
 const hasAllCaps = requiredCaps.every(cap => unit.capableOf(cap));
 ```
 
+## Self-Help
+
+uni.help() - no more zombie docs, all in one place, easy to access, easy to change and keep relevant.
+
 ## Error Handling
 
 ### Self-Validating Units
+
 ```typescript
 class ValidatingUnit extends BaseUnit {
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'validating-unit', version: '1.0.0' }));
-    
+  
     // Validate during construction
     if (!this._validateData(data)) {
       this._markFailed('Invalid data provided', ['Data validation failed']);
       return;
     }
-    
+  
     this._addCapability('process', this.processImpl.bind(this));
   }
   
@@ -208,6 +264,7 @@ if (!unit.created) {
 ## Performance Considerations
 
 ### Lazy Capability Loading
+
 ```typescript
 class LazyUnit extends BaseUnit {
   private _heavyCapabilityLoaded = false;
@@ -230,6 +287,7 @@ class LazyUnit extends BaseUnit {
 ```
 
 ### Capability Caching
+
 ```typescript
 class CachingUnit extends BaseUnit {
   private _capabilityCache?: string[];
@@ -251,6 +309,7 @@ class CachingUnit extends BaseUnit {
 ## Testing Patterns
 
 ### Unit Testing
+
 ```typescript
 describe('MyUnit', () => {
   it('should create successfully', () => {
@@ -277,7 +336,7 @@ describe('MyUnit', () => {
     const evolved = unit.evolve('evolved-unit', {
       newCap: () => 'new capability'
     });
-    
+  
     expect(evolved.dna.parent?.name).toBe('my-unit');
     expect(evolved.capableOf('newCap')).toBe(true);
   });
@@ -285,21 +344,22 @@ describe('MyUnit', () => {
 ```
 
 ### Integration Testing
+
 ```typescript
 describe('Unit Composition', () => {
   it('should compose units successfully', () => {
     const unit1 = Unit1.create();
     const unit2 = Unit2.create();
-    
+  
     unit1.learn([unit2.teach()]);
-    
+  
     expect(unit1.capableOf('unit2Capability')).toBe(true);
   });
   
   it('should maintain evolution lineage', () => {
     const original = OriginalUnit.create();
     const evolved = original.evolve('evolved-unit');
-    
+  
     expect(evolved.dna.parent?.name).toBe(original.dna.name);
     expect(evolved.dna.parent?.version).toBe(original.dna.version);
   });
@@ -309,6 +369,7 @@ describe('Unit Composition', () => {
 ## Migration Guide
 
 ### From Traditional Classes
+
 ```typescript
 // Before: Traditional class
 class Calculator {
@@ -343,6 +404,7 @@ class CalculatorUnit extends BaseUnit {
 ```
 
 ### Benefits of Migration
+
 1. **Self-Documentation**: Units explain themselves
 2. **Composability**: Units can learn from each other
 3. **Evolution**: Units can grow without breaking
