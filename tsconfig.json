@@ -14,6 +14,6 @@
     "preserveSymlinks": true,
     "declaration": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "test", "**/*.test.ts", "src/units-unborn/**/*", "src/units-born/key.ts"]
+  "include": ["src/**/*", "units/units-unborn"],
+  "exclude": ["node_modules", "dist", "test", "**/*.test.ts", "units/units-unborn/**/*", "src/units-born/key.ts"]
 }
