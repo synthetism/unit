@@ -15,7 +15,9 @@ export {
   
   // Base classes
   ValueObject,
+  BaseUnit,
   
   // Utility functions
   createUnitSchema,
+  validateUnitSchema,
 } from './unit';

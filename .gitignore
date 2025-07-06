@@ -3,6 +3,8 @@ dist
 logs
 node_modules/
 temp
-/data
+private
 demo
 units
+tmp
+docs

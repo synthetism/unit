@@ -18,17 +18,15 @@
 
 /**
  * Unit schema interface - the DNA of a unit
- * DNA represents the unit's immutable identity and design purpose
+ * DNA represents the unit's immutable identity and evolution lineage
  */
 export interface UnitSchema {
   /** Unit name */
   readonly name: string;
   /** Unit version */
   readonly version: string;
-  /** Base commands this unit was designed for (immutable identity) */
-  readonly baseCommands: readonly string[];
-  /** Optional description for context */
-  readonly description?: string;
+  /** Parent DNA this unit evolved from (evolution lineage) */
+  readonly parent?: UnitSchema;
 }
 
 /**
@@ -57,6 +55,9 @@ export interface Unit {
   /** Check if unit can execute a command (checks dynamic capabilities) */
   capableOf(command: string): boolean;
   
+  /** Get all current capabilities (always available) */
+  capabilities(): string[];
+
   /** Show help - flexible implementation */
   help(): void;
   
@@ -130,7 +131,7 @@ export abstract class BaseUnit implements Unit {
   protected _stack?: string[];
 
   constructor(schema: UnitSchema) {
-    this._dna = { ...schema, baseCommands: [...schema.baseCommands] };
+    this._dna = { ...schema };
   }
 
   get dna(): UnitSchema {
@@ -155,14 +156,13 @@ export abstract class BaseUnit implements Unit {
     return this._capabilities.has(command);
   }
 
-  abstract help(): void;
-
   /**
    * Get current runtime capabilities (what the unit can actually do now)
+   * Abstract method - must be implemented by each unit
    */
-  getCapabilities(): string[] {
-    return Array.from(this._capabilities.keys());
-  }
+  abstract capabilities(): string[];
+
+  abstract help(): void;
 
   explain?(): string;
 
@@ -174,13 +174,7 @@ export abstract class BaseUnit implements Unit {
     return impl(...args) as R;
   }
 
-  teach(): Record<string, (...args: unknown[]) => unknown> {
-    const capabilities: Record<string, (...args: unknown[]) => unknown> = {};
-    for (const [name, impl] of this._capabilities.entries()) {
-      capabilities[name] = impl;
-    }
-    return capabilities;
-  }
+  abstract teach(): Record<string, (...args: unknown[]) => unknown>;
 
   learn(capabilities: Record<string, (...args: unknown[]) => unknown>[]): void {
     for (const capSet of capabilities) {
@@ -191,7 +185,23 @@ export abstract class BaseUnit implements Unit {
   }
 
   evolve(name: string, additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>): Unit {
-    // Default implementation - can be overridden
+    // Create new DNA with evolution lineage
+    const newDNA: UnitSchema = {
+      name: name,
+      version: this._getNextVersion(),
+      parent: { ...this._dna } // Current DNA becomes parent
+    };
+
+    // Add additional capabilities if provided
+    if (additionalCapabilities) {
+      for (const [capName, capImpl] of Object.entries(additionalCapabilities)) {
+        this._capabilities.set(capName, capImpl);
+      }
+    }
+
+    // Update DNA to new evolved version
+    this._dna = newDNA;
+
     return this;
   }
 
@@ -217,6 +227,21 @@ export abstract class BaseUnit implements Unit {
   protected _getAllCapabilities(): string[] {
     return Array.from(this._capabilities.keys());
   }
+
+  /**
+   * Protected method to generate next version for evolution
+   */
+  private _getNextVersion(): string {
+    const current = this._dna.version;
+    // Simple version increment - can be enhanced later
+    const versionParts = current.split('.');
+    if (versionParts.length >= 3) {
+      const patch = Number.parseInt(versionParts[2]) + 1;
+      versionParts[2] = patch.toString();
+      return versionParts.join('.');
+    }
+    return `${current}.1`;
+  }
 }
 
 /**
@@ -225,14 +250,12 @@ export abstract class BaseUnit implements Unit {
 export function createUnitSchema(config: {
   name: string;
   version: string;
-  baseCommands: string[];
-  description?: string;
+  parent?: UnitSchema;
 }): UnitSchema {
   return Object.freeze({
     name: config.name,
     version: config.version,
-    baseCommands: Object.freeze([...config.baseCommands]),
-    description: config.description,
+    parent: config.parent ? { ...config.parent } : undefined,
   });
 }
 
@@ -250,9 +273,7 @@ export function validateUnitSchema(schema: UnitSchema): boolean {
       schema.version && 
       typeof schema.version === 'string' &&
       schema.version.trim() !== '' &&
-      Array.isArray(schema.baseCommands) &&
-      schema.baseCommands.length > 0 &&
-      schema.baseCommands.every((cmd: string) => typeof cmd === 'string')
+      (schema.parent === undefined || validateUnitSchema(schema.parent))
     );
   } catch {
     return false;

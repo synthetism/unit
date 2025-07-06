@@ -15,9 +15,7 @@ class TestUnit extends BaseUnit {
   private constructor(name: string) {
     super(createUnitSchema({
       name: 'test-unit',
-      version: '1.0.0',
-      baseCommands: ['test', 'demo'],
-      description: 'Test unit for final architecture'
+      version: '1.0.0'
     }));
 
     // Add initial capabilities
@@ -33,10 +31,21 @@ class TestUnit extends BaseUnit {
     return `TestUnit[${this.dna.name}]`;
   }
 
+  capabilities(): string[] {
+    return Array.from(this._getAllCapabilities());
+  }
+
   help(): void {
     console.log('TestUnit - demonstrating final architecture');
-    console.log(`Base commands: ${this.dna.baseCommands.join(', ')}`);
-    console.log(`Current capabilities: ${this.getCapabilities().join(', ')}`);
+    console.log(`Current capabilities: ${this.capabilities().join(', ')}`);
+  }
+
+  teach(): Record<string, (...args: unknown[]) => unknown> {
+    const capabilities: Record<string, (...args: unknown[]) => unknown> = {};
+    for (const [name, impl] of this._capabilities.entries()) {
+      capabilities[name] = impl;
+    }
+    return capabilities;
   }
 
   private testMethod(): string {
@@ -49,35 +58,47 @@ class TestUnit extends BaseUnit {
 }
 
 describe('@synet/unit Final Architecture', () => {
-  describe('UnitSchema with baseCommands', () => {
-    it('should create schema with baseCommands', () => {
+  describe('UnitSchema Evolution', () => {
+    it('should create schema with evolution support', () => {
       const schema = createUnitSchema({
         name: 'test',
-        version: '1.0.0',
-        baseCommands: ['cmd1', 'cmd2'],
-        description: 'Test schema'
+        version: '1.0.0'
       });
 
       expect(schema.name).toBe('test');
       expect(schema.version).toBe('1.0.0');
-      expect(schema.baseCommands).toEqual(['cmd1', 'cmd2']);
-      expect(schema.description).toBe('Test schema');
+      expect(schema.parent).toBeUndefined();
+    });
+
+    it('should create schema with parent lineage', () => {
+      const parentSchema = createUnitSchema({
+        name: 'parent-unit',
+        version: '1.0.0'
+      });
+
+      const childSchema = createUnitSchema({
+        name: 'child-unit',
+        version: '1.0.1',
+        parent: parentSchema
+      });
+
+      expect(childSchema.parent).toEqual(parentSchema);
+      expect(childSchema.parent?.name).toBe('parent-unit');
     });
 
     it('should validate schema correctly', () => {
       const validSchema = createUnitSchema({
         name: 'test',
-        version: '1.0.0',
-        baseCommands: ['cmd']
+        version: '1.0.0'
       });
 
       expect(validateUnitSchema(validSchema)).toBe(true);
 
       // Invalid schemas
       const invalidSchemas: Partial<UnitSchema>[] = [
-        { name: '', version: '1.0.0', baseCommands: ['cmd'] },
-        { name: 'test', version: '', baseCommands: ['cmd'] },
-        { name: 'test', version: '1.0.0', baseCommands: [] }
+        { name: '', version: '1.0.0' },
+        { name: 'test', version: '' },
+        { name: 'test' } // missing version
       ];
       
       for (const schema of invalidSchemas) {
@@ -102,7 +123,7 @@ describe('@synet/unit Final Architecture', () => {
       expect(unit.capableOf('demo')).toBe(true);
       expect(unit.capableOf('unknown')).toBe(false);
       
-      expect(unit.getCapabilities()).toEqual(['test', 'demo']);
+      expect(unit.capabilities()).toEqual(['test', 'demo']);
     });
 
     it('should execute capabilities', async () => {
@@ -130,7 +151,7 @@ describe('@synet/unit Final Architecture', () => {
       unit.learn([newCapabilities]);
       
       expect(unit.capableOf('newSkill')).toBe(true);
-      expect(unit.getCapabilities()).toContain('newSkill');
+      expect(unit.capabilities()).toContain('newSkill');
     });
   });
 
@@ -138,20 +159,22 @@ describe('@synet/unit Final Architecture', () => {
     it('should separate immutable DNA from dynamic capabilities', () => {
       const unit = TestUnit.create('test');
       
-      // DNA is immutable identity
-      expect(unit.dna.baseCommands).toEqual(['test', 'demo']);
+      // DNA is immutable identity - no baseCommands anymore
+      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.version).toBe('1.0.0');
       
       // Capabilities are dynamic
-      expect(unit.getCapabilities()).toEqual(['test', 'demo']);
+      expect(unit.capabilities()).toEqual(['test', 'demo']);
       
       // Learn new capability
       unit.learn([{ newCapability: () => 'new' }]);
       
       // DNA unchanged
-      expect(unit.dna.baseCommands).toEqual(['test', 'demo']);
+      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.version).toBe('1.0.0');
       
       // Capabilities expanded
-      expect(unit.getCapabilities()).toContain('newCapability');
+      expect(unit.capabilities()).toContain('newCapability');
     });
   });
 
@@ -193,8 +216,7 @@ describe('@synet/unit Final Architecture', () => {
         constructor() {
           super(createUnitSchema({
             name: 'failing-unit',
-            version: '1.0.0',
-            baseCommands: ['fail']
+            version: '1.0.0'
           }));
           
           // Mark as failed during construction
@@ -203,6 +225,14 @@ describe('@synet/unit Final Architecture', () => {
         
         whoami(): string {
           return 'FailingUnit';
+        }
+        
+        capabilities(): string[] {
+          return this._getAllCapabilities();
+        }
+        
+        teach(): Record<string, (...args: unknown[]) => unknown> {
+          return {};
         }
         
         help(): void {
@@ -218,6 +248,46 @@ describe('@synet/unit Final Architecture', () => {
       
       // String error is simple to work with
       expect(typeof unit.error).toBe('string');
+    });
+  });
+
+  describe('Unit Evolution', () => {
+    it('should track evolution lineage in DNA', () => {
+      const unit = TestUnit.create('test');
+      
+      // Check initial state
+      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.version).toBe('1.0.0');
+      expect(unit.dna.parent).toBeUndefined();
+      
+      // Evolve the unit
+      const evolved = unit.evolve('advanced-test-unit', {
+        advancedFeature: () => 'advanced-result'
+      });
+      
+      // Check evolution tracking
+      expect(evolved.dna.name).toBe('advanced-test-unit');
+      expect(evolved.dna.version).toBe('1.0.1'); // Version incremented
+      expect(evolved.dna.parent).toBeDefined();
+      expect(evolved.dna.parent?.name).toBe('test-unit');
+      expect(evolved.dna.parent?.version).toBe('1.0.0');
+      
+      // Check capabilities
+      expect(evolved.capableOf('advancedFeature')).toBe(true);
+      expect(evolved.capabilities()).toContain('advancedFeature');
+    });
+
+    it('should support multiple generations of evolution', () => {
+      const unit = TestUnit.create('gen1');
+      
+      // First evolution
+      const gen2 = unit.evolve('gen2-unit');
+      expect(gen2.dna.parent?.name).toBe('test-unit');
+      
+      // Second evolution
+      const gen3 = gen2.evolve('gen3-unit');
+      expect(gen3.dna.parent?.name).toBe('gen2-unit');
+      expect(gen3.dna.parent?.parent?.name).toBe('test-unit');
     });
   });
 });
