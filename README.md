@@ -55,7 +55,7 @@ Units are living architectural entities that know themselves, can teach others, 
 **ALL units must follow the private constructor + static create() pattern.**
 
 ```typescript
-class MyUnit extends BaseUnit {
+class MyUnit extends Unit {
   //  Private constructor
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
@@ -137,9 +137,9 @@ npm install @synet/unit
 ### Basic Usage
 
 ```typescript
-import { BaseUnit, createUnitSchema } from '@synet/unit';
+import { Unit, createUnitSchema } from '@synet/unit';
 
-class CalculatorUnit extends BaseUnit {
+class CalculatorUnit extends Unit {
   
   // Private constructor
   private constructor() {
@@ -278,7 +278,7 @@ console.log(gen3.dna.parent?.parent?.name); // BasicUnit
 Units can be combined in unlimited ways without coupling:
 
 ```typescript
-const composedUnit = BaseUnit.create();
+const composedUnit = Unit.create();
 composedUnit.learn([
   authUnit.teach(),
   cryptoUnit.teach(),

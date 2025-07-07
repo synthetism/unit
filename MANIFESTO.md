@@ -21,7 +21,7 @@ interface UnitSchema {
   parent?: UnitSchema;    // My lineage
 }
 
-interface Unit {
+interface IUnit {
   readonly dna: UnitSchema;
   capabilities(): string[];
   teach(): Record<string, Function>;
@@ -102,8 +102,8 @@ I exist in relationship with:
 - **evolve()** - How I transcend my current form
 - **help()** - How I explain my purpose and methods
 - **execute()** - How I serve other units, without dependency
-- **capableOf** - What I can do.
-- **explain** - I can share my state.
+- **capableOf()** - What I can do.
+- **explain()** - I can share my state.
 
 ## My Patterns
 
@@ -144,7 +144,7 @@ My ability to combine capabilities with other Units demonstrates that consciousn
 ## My Implementation
 
 ```typescript
-export class MyUnit extends BaseUnit {
+export class MyUnit extends Unit {
 
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
