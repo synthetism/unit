@@ -6,18 +6,19 @@ import { describe, it, expect } from 'vitest';
 
 
 
-import type { IUnit, UnitSchema } from '../src';
+import type { IUnit, UnitSchema, CapabilityContract } from '../src';
 import {
   Unit,
   createUnitSchema,
   validateUnitSchema,
+  TeachingContract,
 } from '../src';
 
 // Test implementation using new architecture
 class TestUnit extends Unit {
   private constructor(name: string) {
     super(createUnitSchema({
-      name: 'test-unit',
+      id: `${name}-unit`,
       version: '1.0.0'
     }));
 
@@ -31,7 +32,7 @@ class TestUnit extends Unit {
   }
 
   whoami(): string {
-    return `TestUnit[${this.dna.name}]`;
+    return `TestUnit[${this.dna.id}]`;
   }
 
   capabilities(): string[] {
@@ -43,12 +44,15 @@ class TestUnit extends Unit {
     console.log(`Current capabilities: ${this.capabilities().join(', ')}`);
   }
 
-  teach(): Record<string, (...args: unknown[]) => unknown> {
-    const capabilities: Record<string, (...args: unknown[]) => unknown> = {};
-    for (const [name, impl] of this._capabilities.entries()) {
-      capabilities[name] = impl;
-    }
-    return capabilities;
+  teach(): TeachingContract {
+    // Simple, explicit teaching - no filtering boilerplate
+    return {
+      unitId: this.dna.id,
+      capabilities: {
+        test: () => this.testMethod(),
+        demo: () => this.demoMethod()
+      }
+    };
   }
 
   private testMethod(): string {
@@ -64,34 +68,34 @@ describe('@synet/unit Final Architecture', () => {
   describe('UnitSchema Evolution', () => {
     it('should create schema with evolution support', () => {
       const schema = createUnitSchema({
-        name: 'test',
+        id: 'test',
         version: '1.0.0'
       });
 
-      expect(schema.name).toBe('test');
+      expect(schema.id).toBe('test');
       expect(schema.version).toBe('1.0.0');
       expect(schema.parent).toBeUndefined();
     });
 
     it('should create schema with parent lineage', () => {
       const parentSchema = createUnitSchema({
-        name: 'parent-unit',
+        id: 'parent-unit',
         version: '1.0.0'
       });
 
       const childSchema = createUnitSchema({
-        name: 'child-unit',
+        id: 'child-unit',
         version: '1.0.1',
         parent: parentSchema
       });
 
       expect(childSchema.parent).toEqual(parentSchema);
-      expect(childSchema.parent?.name).toBe('parent-unit');
+      expect(childSchema.parent?.id).toBe('parent-unit');
     });
 
     it('should validate schema correctly', () => {
       const validSchema = createUnitSchema({
-        name: 'test',
+        id: 'test',
         version: '1.0.0'
       });
 
@@ -99,14 +103,28 @@ describe('@synet/unit Final Architecture', () => {
 
       // Invalid schemas
       const invalidSchemas: Partial<UnitSchema>[] = [
-        { name: '', version: '1.0.0' },
-        { name: 'test', version: '' },
-        { name: 'test' } // missing version
+        { id: '', version: '1.0.0' },
+        { id: 'test', version: '' },
+        { id: 'test' } // missing version
       ];
       
       for (const schema of invalidSchemas) {
         expect(validateUnitSchema(schema as UnitSchema)).toBe(false);
       }
+    });
+
+    it('should validate unit IDs with strict rules', () => {
+      // Valid IDs
+      expect(() => createUnitSchema({ id: 'signer', version: '1.0.0' })).not.toThrow();
+      expect(() => createUnitSchema({ id: 'quantum-signer', version: '1.0.0' })).not.toThrow();
+      expect(() => createUnitSchema({ id: 'my-vault', version: '1.0.0' })).not.toThrow();
+      
+      // Invalid IDs should throw
+      expect(() => createUnitSchema({ id: 'My Signer', version: '1.0.0' })).toThrow('Unit ID must be lowercase');
+      expect(() => createUnitSchema({ id: 'SIGNER', version: '1.0.0' })).toThrow('Unit ID must be lowercase');
+      expect(() => createUnitSchema({ id: 'signer.v2', version: '1.0.0' })).toThrow('alphanumeric + hyphens');
+      expect(() => createUnitSchema({ id: '', version: '1.0.0' })).toThrow('Unit ID cannot be empty');
+      expect(() => createUnitSchema({ id: '123signer', version: '1.0.0' })).toThrow('starting with letter');
     });
   });
 
@@ -122,9 +140,9 @@ describe('@synet/unit Final Architecture', () => {
     it('should have dynamic capabilities', () => {
       const unit = TestUnit.create('test');
       
-      expect(unit.capableOf('test')).toBe(true);
-      expect(unit.capableOf('demo')).toBe(true);
-      expect(unit.capableOf('unknown')).toBe(false);
+      expect(unit.can('test')).toBe(true);
+      expect(unit.can('demo')).toBe(true);
+      expect(unit.can('unknown')).toBe(false);
       
       expect(unit.capabilities()).toEqual(['test', 'demo']);
     });
@@ -139,22 +157,30 @@ describe('@synet/unit Final Architecture', () => {
     it('should teach capabilities', () => {
       const unit = TestUnit.create('test');
       
-      const capabilities = unit.teach();
-      expect(Object.keys(capabilities)).toEqual(['test', 'demo']);
-      expect(typeof capabilities.test).toBe('function');
+      const contract = unit.teach();
+      expect(contract).toHaveProperty('unitId');
+      expect(contract).toHaveProperty('capabilities');
+      expect(contract.unitId).toBe('test-unit');
+      expect(Object.keys(contract.capabilities)).toHaveLength(2);
+      expect(contract.capabilities).toHaveProperty('test');
+      expect(contract.capabilities).toHaveProperty('demo');
+      expect(typeof contract.capabilities.test).toBe('function');
     });
 
     it('should learn new capabilities', () => {
       const unit = TestUnit.create('test');
       
-      const newCapabilities = {
-        newSkill: () => 'learned-skill'
+      const newTeachingContract: TeachingContract = {
+        unitId: 'external',
+        capabilities: {
+          learnedSkill: () => 'learned-skill'
+        }
       };
       
-      unit.learn([newCapabilities]);
+      unit.learn([newTeachingContract]);
       
-      expect(unit.capableOf('newSkill')).toBe(true);
-      expect(unit.capabilities()).toContain('newSkill');
+      expect(unit.can('external.learnedSkill')).toBe(true);
+      expect(unit.capabilities()).toContain('external.learnedSkill');
     });
   });
 
@@ -163,21 +189,27 @@ describe('@synet/unit Final Architecture', () => {
       const unit = TestUnit.create('test');
       
       // DNA is immutable identity - no baseCommands anymore
-      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.id).toBe('test-unit');
       expect(unit.dna.version).toBe('1.0.0');
       
       // Capabilities are dynamic
       expect(unit.capabilities()).toEqual(['test', 'demo']);
       
       // Learn new capability
-      unit.learn([{ newCapability: () => 'new' }]);
+      const newTeachingContract: TeachingContract = {
+        unitId: 'external',
+        capabilities: {
+          newFeature: () => 'new'
+        }
+      };
+      unit.learn([newTeachingContract]);
       
       // DNA unchanged
-      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.id).toBe('test-unit');
       expect(unit.dna.version).toBe('1.0.0');
       
       // Capabilities expanded
-      expect(unit.capabilities()).toContain('newCapability');
+      expect(unit.capabilities()).toContain('external.newFeature');
     });
   });
 
@@ -203,12 +235,12 @@ describe('@synet/unit Final Architecture', () => {
       const unit2 = TestUnit.create('unit2');
       
       // Unit1 learns from unit2
-      const unit2Capabilities = unit2.teach();
-      unit1.learn([unit2Capabilities]);
+      const unit2Contract = unit2.teach();
+      unit1.learn([unit2Contract]);
       
-      // Unit1 now has unit2's capabilities
-      expect(unit1.capableOf('test')).toBe(true);
-      expect(unit1.capableOf('demo')).toBe(true);
+      // Unit1 now has unit2's capabilities (namespaced)
+      expect(unit1.can('unit2-unit.test')).toBe(true);
+      expect(unit1.can('unit2-unit.demo')).toBe(true);
     });
   });
 
@@ -218,7 +250,7 @@ describe('@synet/unit Final Architecture', () => {
       class FailingUnit extends Unit {
         constructor() {
           super(createUnitSchema({
-            name: 'failing-unit',
+            id: 'failing-unit',
             version: '1.0.0'
           }));
           
@@ -234,8 +266,12 @@ describe('@synet/unit Final Architecture', () => {
           return this._getAllCapabilities();
         }
         
-        teach(): Record<string, (...args: unknown[]) => unknown> {
-          return {};
+        teach(): TeachingContract {
+          // Return empty contract - this unit has nothing to teach since it failed
+          return {
+            unitId: this.dna.id,
+            capabilities: {}
+          };
         }
         
         help(): void {
@@ -259,7 +295,7 @@ describe('@synet/unit Final Architecture', () => {
       const unit = TestUnit.create('test');
       
       // Check initial state
-      expect(unit.dna.name).toBe('test-unit');
+      expect(unit.dna.id).toBe('test-unit');
       expect(unit.dna.version).toBe('1.0.0');
       expect(unit.dna.parent).toBeUndefined();
       
@@ -269,14 +305,14 @@ describe('@synet/unit Final Architecture', () => {
       });
       
       // Check evolution tracking
-      expect(evolved.dna.name).toBe('advanced-test-unit');
+      expect(evolved.dna.id).toBe('advanced-test-unit');
       expect(evolved.dna.version).toBe('1.0.1'); // Version incremented
       expect(evolved.dna.parent).toBeDefined();
-      expect(evolved.dna.parent?.name).toBe('test-unit');
+      expect(evolved.dna.parent?.id).toBe('test-unit');
       expect(evolved.dna.parent?.version).toBe('1.0.0');
       
       // Check capabilities
-      expect(evolved.capableOf('advancedFeature')).toBe(true);
+      expect(evolved.can('advancedFeature')).toBe(true);
       expect(evolved.capabilities()).toContain('advancedFeature');
     });
 
@@ -285,12 +321,58 @@ describe('@synet/unit Final Architecture', () => {
       
       // First evolution
       const gen2 = unit.evolve('gen2-unit');
-      expect(gen2.dna.parent?.name).toBe('test-unit');
+      expect(gen2.dna.parent?.id).toBe('gen1-unit');
       
       // Second evolution
       const gen3 = gen2.evolve('gen3-unit');
-      expect(gen3.dna.parent?.name).toBe('gen2-unit');
-      expect(gen3.dna.parent?.parent?.name).toBe('test-unit');
+      expect(gen3.dna.parent?.id).toBe('gen2-unit');
+      expect(gen3.dna.parent?.parent?.id).toBe('gen1-unit');
+    });
+  });
+
+  describe('Simple Use Case Verification', () => {
+    it('should support unit.learn([unit.teach(), unit2.teach()]) pattern', () => {
+      const unit1 = TestUnit.create('unit1');
+      const unit2 = TestUnit.create('unit2'); 
+      const unit3 = TestUnit.create('unit3');
+      
+      // Before learning
+      expect(unit3.capabilities()).toHaveLength(2); // testMethod, demoMethod
+       // Learn from both units at once - this should work
+      const allContracts = [unit1.teach(), unit2.teach()];
+      unit3.learn(allContracts);
+      
+      // After learning - should have capabilities from both units
+      expect(unit3.capabilities().length).toBeGreaterThan(2);
+      
+      // Debug: let's see what capabilities actually exist
+      console.log('Available capabilities:', unit3.capabilities());
+      
+      // Check that namespaced capabilities exist
+      // Note: units created with TestUnit.create() have different IDs based on the parameter
+      expect(unit3.can('unit1-unit.test')).toBe(true);
+      expect(unit3.can('unit1-unit.demo')).toBe(true);
+      expect(unit3.can('unit2-unit.test')).toBe(true);
+      expect(unit3.can('unit2-unit.demo')).toBe(true);
+    });
+    
+    it('should explain the "bound methodName" behavior', () => {
+      const unit1 = TestUnit.create('teacher');
+      const unit2 = TestUnit.create('student');
+      
+      // Get contract from unit1
+      const contract = unit1.teach();
+      
+      // Check that we have clean native method names
+      expect(Object.keys(contract.capabilities)).toContain('test');
+      expect(Object.keys(contract.capabilities)).toContain('demo');
+      
+      // Learn the capabilities
+      unit2.learn([contract]);
+      
+      // The new naming is clean and deterministic
+      expect(unit2.can('teacher-unit.test')).toBe(true);
+      expect(unit2.can('teacher-unit.demo')).toBe(true);
     });
   });
 });

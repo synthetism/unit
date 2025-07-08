@@ -1,11 +1,11 @@
 # @synet/unit
 
 ```
-  _    _       _ _                              
- | |  | |     (_) |                             
- | |  | |_ __  _| |_                            
- | |  | | '_ \| | __|                           
- | |__| | | | | | |_  _     _ _            _    
+  _    _       _ _                            
+ | |  | |     (_) |                           
+ | |  | |_ __  _| |_                          
+ | |  | | '_ \| | __|                         
+ | |__| | | | | | |_  _     _ _            _  
   \____/\_| |_|_|\__|| |   (_) |          | |   
       /  \   _ __ ___| |__  _| |_ ___  ___| |_ _   _ _ __ ___ 
      / /\ \ | '__/ __| '_ \| | __/ _ \/ __| __| | | | '__/ _ \
@@ -13,8 +13,8 @@
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
 version: 1.0.2
-description:Living Architecture for Conscious Code                                                
-                                                
+description:Living Architecture for Conscious Code                                              
+                                              
 ```
 
 A foundational library for building self-aware, composable software units that can teach, learn, and evolve.
@@ -344,27 +344,26 @@ const credential = await CredentialUnit.create(claims);
 // Credential learns signing
 credential.learn([signer.teach()])
 
-// Credential can sign now, using Key inherited capability
-credential.execute('sign'); // or add credential.sign() method with capabilities check "Half-native"
+// Credential can sign now, using Signer inherited capability, no private key exposed
+credential.execute('sign'); // or add credential.sign() method with capability check = "Half-Native" method
 
 // Vaults that protects identity
 const vault = await VaultUnit.create(identity);
 
-// Vault learns how to issue Verifiable Credentials and also sign with Key capability.
+// Vault learns how to issue Verifiable Credentials and also sign with Signer capability.
 vault.learn(credential.teach())
 
 // Vault can issue VC and sign, all without knowing private key.  
 await vault.execute('issueVC',claims);
 
-and 
-
-const vc = await vault.verifyVc(vcId) // Vault knows Credential capabilities, will use Signer.verify to verify, 0 injections needed.
+// Vault knows Credential capabilities, will use Signer.verify to verify, 0 injections needed.
+const vc = await vault.verifyVc(vcId) 
 
 ```
 
 *Each line: a conscious entity. Each component: self-aware. Each system: alive.*
 
-**Welcome to conscious software architecture. Welcome to the Synet.**
+**Welcome to conscious software architecture. Welcome to Synet.**
 
 ---
 
