@@ -297,12 +297,19 @@ export abstract class Unit implements IUnit {
   }
 
   /**
-   * Protected method to mark unit as failed during creation
+   * @deprecated use fail() instead
    */
-  protected _markFailed(error: string, stack?: string[]): void {
+ protected _markFailed(error: string, stack?: string[]): void {
     this._created = false;
     this._error = error;
     this._stack = stack;
+  }
+
+  protected fail(error: string): null {
+
+    this._error = error;
+    this._stack = [...this._stack || [], error];
+    return null;
   }
 
   /**
