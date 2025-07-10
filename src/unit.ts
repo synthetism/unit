@@ -8,6 +8,7 @@
  * - Extensible Metadata: Generic metadata interface for capability contracts
  * - Rewrite-by-Default: Capability conflicts resolved by overwriting (intentional updates)
  * - Selective Teaching: Units can teach specific capabilities with teach(['capability1', 'capability2'])
+ * - Cleanup: Removed deprecated error handling methods (_markFailed, fail, error, stack)
  *
  * This is the foundational interface that defines what a Unit is.
  * All units in the Synet ecosystem should implement this interface.
@@ -85,17 +86,10 @@ export interface IUnit {
   /** Whether this unit was created successfully */
   readonly created: boolean;
 
-  /** Error message if creation failed */
-  readonly error?: string;
-
-  /** Stack trace or additional error details */
-  readonly stack?: string[];
-
   /** Get unit identity as string */
   whoami(): string;
 
   /** @deprecated Use `can` instead */
-
   capableOf(command: string): boolean;
 
   /** Check if unit can execute a command (checks dynamic capabilities) */
@@ -197,8 +191,6 @@ export abstract class Unit implements IUnit {
   protected _dna: UnitSchema;
   protected _capabilities = new Map<string, (...args: unknown[]) => unknown>();
   protected _created = true;
-  protected _error?: string;
-  protected _stack?: string[];
 
   /**
    * Protected constructor - prevents direct instantiation
@@ -222,14 +214,6 @@ export abstract class Unit implements IUnit {
 
   get created(): boolean {
     return this._created;
-  }
-
-  get error(): string | undefined {
-    return this._error;
-  }
-
-  get stack(): string[] | undefined {
-    return this._stack;
   }
 
   abstract whoami(): string;
@@ -299,36 +283,6 @@ export abstract class Unit implements IUnit {
     this._dna = newDNA;
 
     return this;
-  }
-
-  /**
-   * @deprecated Use Result<T> pattern for complex operations, throw Error for simple operations
-   * 
-   * This method remains for backwards compatibility with existing units.
-   * 
-   * For new units:
-   * - Simple operations: throw new Error(message)
-   * - Complex operations: return Result.fail(message) from @synet/patterns
-   */
-  protected _markFailed(error: string, stack?: string[]): void {
-    this._created = false;
-    this._error = error;
-    this._stack = stack;
-  }
-
-  /**
-   * @deprecated Use Result<T> pattern for complex operations, throw Error for simple operations
-   * 
-   * This method remains for backwards compatibility with existing units like Credential.
-   * 
-   * For new units:
-   * - Simple operations: throw new Error(message)
-   * - Complex operations: return Result.fail(message) from @synet/patterns
-   */
-  protected fail(error: string): null {
-    this._error = error;
-    this._stack = [...this._stack || [], error];
-    return null;
   }
 
   /**

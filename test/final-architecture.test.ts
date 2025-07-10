@@ -244,52 +244,6 @@ describe('@synet/unit Final Architecture', () => {
     });
   });
 
-  describe('Error Handling with string errors', () => {
-    it('should use string errors for simplicity', () => {
-      // Create a unit that fails validation
-      class FailingUnit extends Unit {
-        constructor() {
-          super(createUnitSchema({
-            id: 'failing-unit',
-            version: '1.0.0'
-          }));
-          
-          // Mark as failed during construction
-          this._markFailed('Test failure', ['detail1', 'detail2']);
-        }
-        
-        whoami(): string {
-          return 'FailingUnit';
-        }
-        
-        capabilities(): string[] {
-          return this._getAllCapabilities();
-        }
-        
-        teach(): TeachingContract {
-          // Return empty contract - this unit has nothing to teach since it failed
-          return {
-            unitId: this.dna.id,
-            capabilities: {}
-          };
-        }
-        
-        help(): void {
-          console.log('This unit failed');
-        }
-      }
-      
-      const unit = new FailingUnit();
-      
-      expect(unit.created).toBe(false);
-      expect(unit.error).toBe('Test failure');
-      expect(unit.stack).toEqual(['detail1', 'detail2']);
-      
-      // String error is simple to work with
-      expect(typeof unit.error).toBe('string');
-    });
-  });
-
   describe('Unit Evolution', () => {
     it('should track evolution lineage in DNA', () => {
       const unit = TestUnit.create('test');

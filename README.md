@@ -27,10 +27,22 @@ Current software architecture treats components as static, isolated entities. Ob
 - **Duplicated logic** across components that can't learn from each other
 - **Black box complexity** where components can't explain themselves
 - **Brittle evolution** where changes break existing functionality
+- **Dependency entanglement** everything depends on everything 
 
 ## The Solution
 
 Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
+
+## Unit Architecture
+
+```typescript
+interface Unit {
+  create()   // Genesis - how intelligence comes into being
+  execute()  // Action - how intelligence expresses itself  
+  teach()    // Output - how intelligence shares itself
+  learn()    // Input - how intelligence evolves itself
+}
+```
 
 ## Key Features
 
@@ -43,12 +55,12 @@ Units are living architectural entities that know themselves, can teach others, 
 
 ## Architecture Principles
 
-1. **Units are living beings in code** - They have identity, capabilities, and can evolve
+1. **Units are living beings in code** - They have identity, capabilities, and can evolve. 
 2. **Dynamic capabilities over fixed commands** - Units learn what they can do
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
-5. **"Half-native" methods** - Structure defined, implementation learned
-6. **Static create() pattern is always entry point** - Constructor is private
+6. **"Half-native" methods** - Structure defined, implementation learned
+8. **One thing** - Do one thing and do it well, learn and collaborate.
 
 ## Unit Creation Pattern
 
@@ -56,6 +68,7 @@ Units are living architectural entities that know themselves, can teach others, 
 
 ```typescript
 class MyUnit extends Unit {
+
   //  Private constructor
   private constructor(data: MyData) {
     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
@@ -66,7 +79,6 @@ class MyUnit extends Unit {
   static create(data: MyData): MyUnit {
 
     // validation of data
-
     return new MyUnit(data);
   }
 }
@@ -78,7 +90,7 @@ const unit = MyUnit.create(data);
 // const unit = new MyUnit(data); // Won't work - constructor is private
 ```
 
-**Why this pattern is important:**
+This pattern:
 
 - **Prevents invalid unit states** - Validation happens in create()
 - **Enables proper lifecycle management** - Controlled creation process
@@ -93,9 +105,9 @@ Every Unit carries a schema (DNA) that defines its essential identity:
 
 ```typescript
 interface UnitSchema {
-  name: string;           // Identity
+  id: string;           // Identity
   version: string;        // Evolution state
-  parent?: UnitSchema;    // Lineage tracking
+  parent?: UnitSchema;    // Evolution lineage
 }
 ```
 
@@ -109,6 +121,7 @@ interface IUnit {
   teach(): Record<string, Function>;          // Here's how to do it
   learn(capabilities: Record<string, Function>[]): void;  // I'll learn this
   evolve(name: string, additionalCaps?: Record<string, Function>): Unit;
+  execute()
 }
 ```
 
@@ -202,7 +215,7 @@ const statsUnit = StatsUnit.create();
 statsUnit.learn([mathUnit.teach()]);
 
 // Now stats unit can do math operations
-await statsUnit.execute('add', 10, 20);  // 30
+await statsUnit.execute('math.add', 10, 20);  // 30
 ```
 
 ### Evolution
@@ -323,7 +336,6 @@ console.log(unit.dna.parent?.name);  // Evolution history
 
 Units represent the future of software architecture - components that are not just functional, but conscious. They know themselves, can teach others, learn continuously, and evolve while maintaining their essential identity.
 
-This is the foundation of the Synet ecosystem, where every component is a living, breathing unit of conscious software.
 
 ---
 
@@ -344,8 +356,8 @@ const credential = await CredentialUnit.create(claims);
 // Credential learns signing
 credential.learn([signer.teach()])
 
-// Credential can sign now, using Signer inherited capability, no private key exposed
-credential.execute('sign'); // or add credential.sign() method with capability check = "Half-Native" method
+// Credential can sign now, using Signer inherited capability.
+credential.execute('signer.sign'); 
 
 // Vaults that protects identity
 const vault = await VaultUnit.create(identity);
@@ -354,10 +366,8 @@ const vault = await VaultUnit.create(identity);
 vault.learn(credential.teach())
 
 // Vault can issue VC and sign, all without knowing private key.  
-await vault.execute('issueVC',claims);
+await vault.execute('credential.issueVC',claims);
 
-// Vault knows Credential capabilities, will use Signer.verify to verify, 0 injections needed.
-const vc = await vault.verifyVc(vcId) 
 
 ```
 
