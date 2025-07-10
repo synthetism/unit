@@ -174,11 +174,16 @@ export abstract class ValueObject<T> {
  * ⚠️ CRITICAL: Units must use a private constructor + static create() pattern
  * This prevents direct instantiation and ensures proper validation/lifecycle
  *
+ * 📋 ERROR HANDLING STRATEGY:
+ * - Simple operations (CRUD, getters): Use exceptions (throw new Error)
+ * - Complex operations (creation, auth): Use Result<T> pattern from @synet/patterns
+ * - See error-strategy.md for detailed guidelines
+ *
  * Example:
  * ```typescript
  * class MyUnit extends Unit {
  *   private constructor(data: MyData) {
- *     super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
+ *     super(createUnitSchema({ id: 'my-unit', version: '1.0.0' }));
  *     // Setup capabilities...
  *   }
  *
@@ -297,16 +302,30 @@ export abstract class Unit implements IUnit {
   }
 
   /**
-   * @deprecated use fail() instead
+   * @deprecated Use Result<T> pattern for complex operations, throw Error for simple operations
+   * 
+   * This method remains for backwards compatibility with existing units.
+   * 
+   * For new units:
+   * - Simple operations: throw new Error(message)
+   * - Complex operations: return Result.fail(message) from @synet/patterns
    */
- protected _markFailed(error: string, stack?: string[]): void {
+  protected _markFailed(error: string, stack?: string[]): void {
     this._created = false;
     this._error = error;
     this._stack = stack;
   }
 
+  /**
+   * @deprecated Use Result<T> pattern for complex operations, throw Error for simple operations
+   * 
+   * This method remains for backwards compatibility with existing units like Credential.
+   * 
+   * For new units:
+   * - Simple operations: throw new Error(message)
+   * - Complex operations: return Result.fail(message) from @synet/patterns
+   */
   protected fail(error: string): null {
-
     this._error = error;
     this._stack = [...this._stack || [], error];
     return null;
