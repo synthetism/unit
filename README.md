@@ -381,7 +381,7 @@ await vault.execute('credential.issueVC',claims);
 
 - [Technical Documentation](./docs/)
 - [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
-- [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
+- [Doctrine](./DOCTRINE.md) - *The deeper philosophy*
 - [🏗️ Examples](./examples/)
 - [🧪 Tests](./test/)
 - [0en](mailto:0en@synthetism.ai)
