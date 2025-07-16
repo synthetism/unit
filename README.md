@@ -23,17 +23,57 @@ A foundational library for building self-aware, composable software units that c
 
 Current software architecture treats components as static, isolated entities. Objects are created, used, and discarded without awareness of their own capabilities or the ability to grow. This leads to:
 
+```typescript
+/* 
+ * Framework thinking, dependency chaos
+ @depricated
+*/
+class MessyUnit {
+  constructor(
+    private crypto: CryptoLib,     // External dependency
+    private fs: FileSystem,        // Injection pollution  
+    private logger: Logger         // Complexity worship
+  ) {}
+  
+  doEverything() { /* monolithic mess */ }
+}
+
+```
+
 - **Rigid systems** that can't adapt to changing requirements
 - **Duplicated logic** across components that can't learn from each other
 - **Black box complexity** where components can't explain themselves
 - **Brittle evolution** where changes break existing functionality
-- **Dependency entanglement** everything depends on everything 
+- **Dependency entanglement** - everything depends on everything 
+- **Abstraction cathedrals** 
 
 ## The Solution
 
-Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
+Composition over inheritance 
+
+```typescript
+// Unit consciousness, capability flow
+class SimpleUnit extends Unit {
+  private constructor(props: CleanUnitProps) { super(props); }
+  
+  static create(config: CleanConfig): SimpleUnit { /* factory clarity */ }
+  
+  teach(): TeachingContract { /* explicit capability sharing */ }
+  learn(contracts: TeachingContract[]): void { /* conscious evolution */ }
+  execute() { /* unit API */ }
+}
+
+const simpleUnit = SimpleUnit.create();
+const smartUnit = SmartUnit.create();
+
+simpleUnit.learn([smartUnit.teach()]) // simple became smart
+smartUnit.learn([simpleUnit.teach()]) // learn new capabilities 
+
+```
 
 ## Unit Architecture
+
+Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
 
 ```typescript
 interface Unit {
@@ -44,14 +84,11 @@ interface Unit {
 }
 ```
 
-## Key Features
-
 - **Unit DNA**: Every unit has a schema that defines its identity and capabilities
 - **Dynamic Capabilities**: Units learn abilities from other units at runtime
 - **Self-Validating**: Units carry their creation status and error information
 - **Composable**: Units can teach and learn from each other
-- **Zero Dependencies**: Pure TypeScript with no external dependencies
-- **Type Safe**: Full TypeScript support with proper error handling
+
 
 ## Architecture Principles
 
@@ -59,8 +96,8 @@ interface Unit {
 2. **Dynamic capabilities over fixed commands** - Units learn what they can do
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
-6. **"Half-native" methods** - Structure defined, implementation learned
-8. **One thing** - Do one thing and do it well, learn and collaborate.
+6. **Expected learning** - Structure defined, implementation learned
+8. **One thing** - Do one thing and do it well and teach others.
 
 ## Unit Creation Pattern
 
@@ -78,7 +115,7 @@ class MyUnit extends Unit {
   // Static create() as the only entry point
   static create(data: MyData): MyUnit {
 
-    // validation of data
+    // Validated Unit
     return new MyUnit(data);
   }
 }
@@ -160,9 +197,6 @@ class CalculatorUnit extends Unit {
       name: 'calculator-unit',
       version: '1.0.0'
     }));
-  
-    this._addCapability('add', this.addImpl.bind(this));
-    this._addCapability('multiply', this.multiplyImpl.bind(this));
   }
   
   // Static create() 
@@ -348,7 +382,7 @@ Units are the foundation for a complete ecosystem of conscious software componen
 const identity = await IdentityUnit.create('0en');
 
 // Keys that understand their purpose, private key is protected  
-const signer = await Signer.create('Ed25519');
+const signer = await Signer.generate('Ed25519');
 
 // Credentials that validate themselves
 const credential = await CredentialUnit.create(claims);
@@ -356,7 +390,7 @@ const credential = await CredentialUnit.create(claims);
 // Credential learns signing
 credential.learn([signer.teach()])
 
-// Credential can sign now, using Signer inherited capability.
+// Credential can sign, using signer inherited capability.
 credential.execute('signer.sign'); 
 
 // Vaults that protects identity

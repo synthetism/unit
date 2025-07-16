@@ -10,7 +10,7 @@
 
 ```typescript
 interface UnitSchema {
-  name: string;           // Unit identity
+  id: string;           // Unit id 
   version: string;        // Evolution state  
   parent?: UnitSchema;    // Lineage tracking
 }
