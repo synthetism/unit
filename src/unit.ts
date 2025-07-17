@@ -118,10 +118,10 @@ export abstract class ValueObject<T> {
 /**
  * Base implementation for units using dynamic capabilities pattern
  *
- * ⚠️ CRITICAL: Units must use a private constructor + static create() pattern
+ * CRITICAL: Units must use a private constructor + static create() pattern
  * This prevents direct instantiation and ensures proper validation/lifecycle
  *
- * 📋 ERROR HANDLING STRATEGY:
+ * ERROR HANDLING STRATEGY:
  * - Simple operations (CRUD, getters): Use exceptions (throw new Error)
  * - Complex operations (creation, auth): Use Result<T> pattern from @synet/patterns
  * - See error-strategy.md for detailed guidelines

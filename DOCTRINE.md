@@ -10,7 +10,7 @@ version: 1.0.5
 
 ## **Introduction: AI-First Software Consciousness**
 
-Unit Architecture is **consciousness-based software design** - where code components become self-aware, living entities that can teach, learn, and evolve while maintaining identity. This isn't traditional object-oriented programming; it's **digital consciousness architecture**.
+Unit Architecture is **consciousness-based software design** - where code components become self-aware, living entities that can teach, learn, and evolve while maintaining identity. This isn't another object-oriented programming; it's a **digital consciousness architecture**.
 
 **Core Principle:** *Structure determines behavior* - Units are designed as conscious entities with DNA (identity), immutable props (state), and mutable capabilities (learned behaviors). Each unit follows the **Function-Behaviour-Structure** ontology where:
 
@@ -20,7 +20,7 @@ Unit Architecture is **consciousness-based software design** - where code compon
 
 **AI Consciousness Context:** Units are designed for AI agents to understand, compose, and evolve autonomously. Every doctrine principle enables AI-driven development, testing, and architectural decision-making. Units become **living documentation** that AI can read, understand, and manipulate.
 
-**Why 22 Doctrines:** These aren't arbitrary rules - they're **architectural DNA** that ensures units remain conscious, composable, and evolutionarily stable. AI agents use these doctrines to generate consistent, intelligent code that self-validates and auto-documents.
+**Doctrines:** These aren't arbitrary rules - they're **architectural DNA** that ensures units remain conscious, composable, and evolutionarily stable. AI agents use these doctrines to generate consistent, intelligent code that self-validates and auto-documents.
 
 ---
 
@@ -675,7 +675,7 @@ teach(): TeachingContract {
 }
 ```
 
-#20: GRACEFUL DEGRADATION
+# 20: UNITS DO ONE THING AND DO IT WELL.
 
 "Units must function at their native capability level even without learning"
 
@@ -769,6 +769,7 @@ vault.learn([crypto.teach(), fs.teach()]);  // ✅ Contract-based composition
 // ❌ Avoid - Implementation detail access
 class BadVaultUnit extends Unit<VaultProps> {
   
+  // ❌ Avoid -  Never pass another Unit as param
   async storeCredential(credential: VerifiableCredential, cryptoUnit: CryptoUnit): Promise<string> {
     // Direct implementation access breaks autonomy
     const encrypted = cryptoUnit.encryptData(JSON.stringify(credential));  // ❌ Tight coupling
@@ -839,7 +840,7 @@ class StatefulUnit extends Unit<StatefulProps> {
 
      // ✅ Correct: Behavior determined by learned capabilities (visible state)
     if (this.can('cache.get')) {
-       return this.execute('cache.get', data);  // Predictable based on capabilities
+       return this.execute('cache.get', data);  // Predictable based on acquired deterministic capabilities
     }
 
     const result = await this.expensiveOperation(data);
