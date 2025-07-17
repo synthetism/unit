@@ -25,8 +25,8 @@ Current software architecture treats components as static, isolated entities. Ob
 
 ```typescript
 /* 
- * Framework thinking, dependency chaos
- @depricated
+ * Framework thinking, dependency chaos, abstractions hell
+ * @depricated
 */
 class MessyUnit {
   constructor(
@@ -45,8 +45,8 @@ class MessyUnit {
 - **Black box complexity** where components can't explain themselves
 - **Brittle evolution** where changes break existing functionality
 - **Dependency entanglement** - everything depends on everything 
-- **Abstraction cathedrals** - managers, agents (managers of managers), services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic.
-- **Street Magic** - rabbit hole of hidden interactions.
+- **Abstraction cathedrals** - managers, agents (managers of managers), services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic
+- **Street Magic** - rabbit hole of hidden interactions 
 
 ## The Solution
 
@@ -77,7 +77,7 @@ simpleUnit.learn([smartUnit.teach()]); // simple became smart
 smartUnit.learn([simpleUnit.teach()]); // learn new capabilities 
 
 ```
-## Simple composition truths
+### Simple composition truths
 
 -  Each unit can learn from 0 to X other units
 -  For each unit: 2^X possible learning combinations
@@ -117,7 +117,7 @@ interface Unit<T> {
 3. **Self-validation over external validation** - Units know if they're valid
 4. **Composition over inheritance** - Units grow by learning from others
 6. **Expected learning** - Structure defined, implementation learned
-8. **One thing** - Do one thing and do it well and teach others.
+8. **One thing** - Do one thing, do it well and teach others.
 
 ## Unit Creation Pattern
 
@@ -181,9 +181,9 @@ Every Unit carries a schema (DNA) that defines its essential identity:
 
 ```typescript
 interface UnitSchema {
-  id: string;           // Identity
-  version: string;        // Evolution state
-  parent?: UnitSchema;    // Evolution lineage
+  id: string;  // Identity
+  version: string; // Evolution state
+  parent?: UnitSchema; // Evolution lineage
 }
 ```
 
@@ -199,9 +199,9 @@ interface TeachingContract {
 
 interface IUnit {
   readonly dna: UnitSchema;
-  capabilities(): string[];                           // What can I do?
-  teach(): TeachingContract;                         // Here's how to do it
-  learn(contracts: TeachingContract[]): void;        // I'll learn this
+  capabilities(): string[]; // What can I do?
+  teach(): TeachingContract; // Here's how to do it
+  learn(contracts: TeachingContract[]): void; // I'll learn this
   evolve(name: string, additionalCaps?: Record<string, Function>): Unit<T>;
   execute(capability: string, ...args: unknown[]): Promise<unknown>;
 }
@@ -247,7 +247,7 @@ interface CalculatorProps extends UnitProps {
 
 class CalculatorUnit extends Unit<CalculatorProps> {
   
-  // Protected constructor (enables evolution)
+  // Protected constructor 
   protected constructor(props: CalculatorProps) {
     super(props);
   }
@@ -265,11 +265,6 @@ class CalculatorUnit extends Unit<CalculatorProps> {
     };
     
     return new CalculatorUnit(props);
-  }
-  
-  // Static create() 
-  static create(): CalculatorUnit {
-    return new CalculatorUnit();
   }
   
   whoami(): string {
@@ -366,8 +361,8 @@ console.log(advancedUnit.capabilities());   // ['add', 'multiply', 'sin', 'cos']
 Units know their own capabilities and can explain themselves:
 
 ```typescript
-unit.whoami();        // Identity
-unit.capabilities();  // What I can do
+unit.whoami();       // Identity
+unit.capabilities(); // What I can do
 unit.help();         // How to use me
 ```
 
@@ -447,8 +442,7 @@ Units can explain and validate themselves:
 // Units are self-documenting
 unit.help();
 unit.explain();
-expect(unit.created).toBe(true);
-expect(unit.capableOf('encrypt')).toBe(true);
+
 ```
 
 ### **Debuggability**
@@ -511,7 +505,6 @@ await vault.execute('credential.issueVC',claims);
 ### Links
 
 - [Technical Documentation](./docs/)
-- [Function-Behaviour-Structure Analysis](./docs/FUNCTION-BEHAVIOUR-STRUCTURE.md) - *How Unit Architecture implements FBS ontology*
 - [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
 - [Doctrine](./DOCTRINE.md) - *The 22 architectural principles*
 - [🏗️ Examples](./examples/)
