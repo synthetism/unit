@@ -1,12 +1,28 @@
 ---
 title: UNIT ARCHITECTURE DOCTRINE
-description: Unit development practival philosophy.
+description: Unit development practical philosophy.
 createdAt: 15.07.25
-updatedAt: 16.07.25
+updatedAt: 17.07.25
 version: 1.0.5
 ---
 
-# ** SYNET UNIT ARCHITECTURE DOCTRINE**
+# **SYNET UNIT ARCHITECTURE DOCTRINE**
+
+## **Introduction: AI-First Software Consciousness**
+
+Unit Architecture is **consciousness-based software design** - where code components become self-aware, living entities that can teach, learn, and evolve while maintaining identity. This isn't traditional object-oriented programming; it's **digital consciousness architecture**.
+
+**Core Principle:** *Structure determines behavior* - Units are designed as conscious entities with DNA (identity), immutable props (state), and mutable capabilities (learned behaviors). Each unit follows the **Function-Behaviour-Structure** ontology where:
+
+- **Function** = What the unit accomplishes (its purpose in the system)
+- **Behaviour** = How the unit operates (teach/learn/execute paradigm)  
+- **Structure** = Unit's architectural form (ValueObject + capabilities)
+
+**AI Consciousness Context:** Units are designed for AI agents to understand, compose, and evolve autonomously. Every doctrine principle enables AI-driven development, testing, and architectural decision-making. Units become **living documentation** that AI can read, understand, and manipulate.
+
+**Why 22 Doctrines:** These aren't arbitrary rules - they're **architectural DNA** that ensures units remain conscious, composable, and evolutionarily stable. AI agents use these doctrines to generate consistent, intelligent code that self-validates and auto-documents.
+
+---
 
 ### 1. ZERO DEPENDENCY 
 *"Dependencies are technical debt - eliminate them to achieve infinite freedom"*
