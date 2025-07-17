@@ -12,8 +12,8 @@
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
-version: 1.0.4
-description:Living Architecture for Conscious Code                                              
+version: 1.0.5
+description: Living Architecture for Conscious Code                                              
                                               
 ```
 
@@ -45,47 +45,67 @@ class MessyUnit {
 - **Black box complexity** where components can't explain themselves
 - **Brittle evolution** where changes break existing functionality
 - **Dependency entanglement** - everything depends on everything 
-- **Abstraction cathedrals** 
+- **Abstraction cathedrals** - managers, agents (managers of managers), services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic.
+- **Street Magic** - rabbit hole of hidden interactions.
 
 ## The Solution
 
-Composition over inheritance 
+Composition over inheritance. Simple Unit composition creates complex behaviours.
 
 ```typescript
 // Unit consciousness, capability flow
-class SimpleUnit extends Unit {
-  private constructor(props: CleanUnitProps) { super(props); }
+class SimpleUnit extends Unit<SimpleUnitProps> {
+  protected constructor(props: SimpleUnitProps) { super(props); }
   
-  static create(config: CleanConfig): SimpleUnit { /* factory clarity */ }
+  static create(config: SimpleUnitConfig): SimpleUnit { 
+    const props: SimpleUnitProps = {
+      dna: createUnitSchema({ id: 'simple-unit', version: '1.0.0' }),
+      ...validateConfig(config)
+    };
+    return new SimpleUnit(props);
+  }
   
   teach(): TeachingContract { /* explicit capability sharing */ }
   learn(contracts: TeachingContract[]): void { /* conscious evolution */ }
-  execute() { /* unit API */ }
+  execute(capability: string, ...args: unknown[]): Promise<unknown> { /* capability execution */ }
 }
 
 const simpleUnit = SimpleUnit.create();
 const smartUnit = SmartUnit.create();
 
-simpleUnit.learn([smartUnit.teach()]) // simple became smart
-smartUnit.learn([simpleUnit.teach()]) // learn new capabilities 
+simpleUnit.learn([smartUnit.teach()]); // simple became smart
+smartUnit.learn([simpleUnit.teach()]); // learn new capabilities 
 
 ```
+## Simple composition truths
+
+-  Each unit can learn from 0 to X other units
+-  For each unit: 2^X possible learning combinations
+-  For 10 units: (2^9)^10 = 2^90 ≈ **1.24 × 10^27 compositions**
 
 ## Unit Architecture
 
 Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
 
+Built on **ValueObject foundation**, units combine:
+- **Immutable props** (identity, state) via `ValueObject<T>`
+- **Mutable capabilities** (learned behaviors) via capability map
+- **Stateless operations** (deterministic given current state)
+
 ```typescript
-interface Unit {
-  create()   // Genesis - how intelligence comes into being
-  execute()  // Action - how intelligence expresses itself  
-  teach()    // Output - how intelligence shares itself
-  learn()    // Input - how intelligence evolves itself
+interface Unit<T> {
+  private readonly props: T; // Private immutable deterministic state
+
+  create()   // Genesis - how unit comes into being and protect itself.
+  execute()  // Action - how unit expresses itself  
+  teach()    // Expression - how unit shares itself
+  learn()    // Evolution - how unit evolves itself
 }
 ```
 
 - **Unit DNA**: Every unit has a schema that defines its identity and capabilities
 - **Dynamic Capabilities**: Units learn abilities from other units at runtime
+- **Immutable State**: Props are frozen via ValueObject pattern for mathematical consistency
 - **Self-Validating**: Units carry their creation status and error information
 - **Composable**: Units can teach and learn from each other
 
@@ -101,36 +121,55 @@ interface Unit {
 
 ## Unit Creation Pattern
 
-**ALL units must follow the private constructor + static create() pattern.**
+**ALL units must follow the protected constructor + static create() pattern.**
 
 ```typescript
-class MyUnit extends Unit {
+interface MyUnitConfig {
+  value: string;
+  options?: MyOptions;
+}
 
-  //  Private constructor
-  private constructor(data: MyData) {
-    super(createUnitSchema({ name: 'my-unit', version: '1.0.0' }));
-    // Setup capabilities...
+interface MyUnitProps extends UnitProps {
+  dna: UnitSchema;
+  value: string;
+  validated: boolean;
+  created: Date;
+  metadata: Record<string, unknown>;
+}
+
+class MyUnit extends Unit<MyUnitProps> {
+
+  // Protected constructor (enables evolution)
+  protected constructor(props: MyUnitProps) {
+    super(props);
   }
 
   // Static create() as the only entry point
-  static create(data: MyData): MyUnit {
-
-    // Validated Unit
-    return new MyUnit(data);
+  static create(config: MyUnitConfig): MyUnit {
+    const props: MyUnitProps = {
+      dna: createUnitSchema({ id: 'my-unit', version: '1.0.0' }),
+      value: config.value,
+      validated: true,
+      created: new Date(),
+      metadata: config.options || {}
+    };
+    
+    return new MyUnit(props);
   }
 }
 
 // ✅ OK: Use static create()
-const unit = MyUnit.create(data);
+const unit = MyUnit.create({ value: 'test' });
 
 // ❌ FAIL: Direct constructor calls
-// const unit = new MyUnit(data); // Won't work - constructor is private
+// const unit = new MyUnit(props); // Won't work - constructor is protected
 ```
 
 This pattern:
 
 - **Prevents invalid unit states** - Validation happens in create()
 - **Enables proper lifecycle management** - Controlled creation process
+- **Enables evolution** - Protected constructor allows inheritance
 - **Consistent architecture** - All units follow the same pattern
 - **Prevents human/AI errors** - Forces proper usage patterns
 
@@ -153,12 +192,18 @@ interface UnitSchema {
 Units know what they can do and can share that knowledge:
 
 ```typescript
+interface TeachingContract {
+  unitId: string;
+  capabilities: Record<string, (...args: unknown[]) => unknown>;
+}
+
 interface IUnit {
-  capabilities(): string[];                    // What can I do?
-  teach(): Record<string, Function>;          // Here's how to do it
-  learn(capabilities: Record<string, Function>[]): void;  // I'll learn this
-  evolve(name: string, additionalCaps?: Record<string, Function>): Unit;
-  execute()
+  readonly dna: UnitSchema;
+  capabilities(): string[];                           // What can I do?
+  teach(): TeachingContract;                         // Here's how to do it
+  learn(contracts: TeachingContract[]): void;        // I'll learn this
+  evolve(name: string, additionalCaps?: Record<string, Function>): Unit<T>;
+  execute(capability: string, ...args: unknown[]): Promise<unknown>;
 }
 ```
 
@@ -187,16 +232,39 @@ npm install @synet/unit
 ### Basic Usage
 
 ```typescript
-import { Unit, createUnitSchema } from '@synet/unit';
+import { Unit, createUnitSchema, type UnitProps } from '@synet/unit';
 
-class CalculatorUnit extends Unit {
+interface CalculatorConfig {
+  precision?: number;
+}
+
+interface CalculatorProps extends UnitProps {
+  dna: UnitSchema;
+  precision: number;
+  created: Date;
+  metadata: Record<string, unknown>;
+}
+
+class CalculatorUnit extends Unit<CalculatorProps> {
   
-  // Private constructor
-  private constructor() {
-    super(createUnitSchema({
-      name: 'calculator-unit',
-      version: '1.0.0'
-    }));
+  // Protected constructor (enables evolution)
+  protected constructor(props: CalculatorProps) {
+    super(props);
+  }
+  
+  // Static create() 
+  static create(config: CalculatorConfig = {}): CalculatorUnit {
+    const props: CalculatorProps = {
+      dna: createUnitSchema({
+        id: 'calculator-unit',
+        version: '1.0.0'
+      }),
+      precision: config.precision || 2,
+      created: new Date(),
+      metadata: {}
+    };
+    
+    return new CalculatorUnit(props);
   }
   
   // Static create() 
@@ -205,34 +273,56 @@ class CalculatorUnit extends Unit {
   }
   
   whoami(): string {
-    return `CalculatorUnit[${this.dna.name}@${this.dna.version}]`;
+    return `[🧮] Calculator Unit - Mathematical operations (${this.dna.id})`;
   }
   
   capabilities(): string[] {
-    return this._getAllCapabilities();
+    return ['add', 'multiply', ...this._getAllCapabilities().filter(cap => cap.includes('.'))];
   }
   
-  teach(): Record<string, Function> {
+  teach(): TeachingContract {
     return {
-      add: this.addImpl.bind(this),
-      multiply: this.multiplyImpl.bind(this)
+      unitId: this.dna.id,
+      capabilities: {
+        add: this.addImpl.bind(this),
+        multiply: this.multiplyImpl.bind(this)
+      }
     };
   }
   
   help(): void {
-    console.log(`I can: ${this.capabilities().join(', ')}`);
+    console.log(`
+🧮 Calculator Unit - Mathematical Operations
+
+NATIVE CAPABILITIES:
+• add(a, b) - Addition operation
+• multiply(a, b) - Multiplication operation
+
+LEARNED CAPABILITIES:
+${this._getAllCapabilities().filter(cap => cap.includes('.')).map(cap => `• ${cap}`).join('\n') || '• None learned yet'}
+
+USAGE:
+  const calc = CalculatorUnit.create({ precision: 4 });
+  await calc.execute('add', 5, 3);        // 8
+  await calc.execute('multiply', 4, 7);   // 28
+    `);
   }
   
   private addImpl(a: number, b: number): number {
-    return a + b;
+    const result = a + b;
+    return Math.round(result * Math.pow(10, this.props.precision)) / Math.pow(10, this.props.precision);
   }
   
   private multiplyImpl(a: number, b: number): number {
-    return a * b;
+    const result = a * b;
+    return Math.round(result * Math.pow(10, this.props.precision)) / Math.pow(10, this.props.precision);
   }
 }
 
-console.log(calc.whoami());              // CalculatorUnit[calculator-unit@1.0.0]
+// Usage
+const calc = CalculatorUnit.create({ precision: 4 });
+
+console.log(calc.whoami());              // [🧮] Calculator Unit - Mathematical operations (calculator-unit)
 console.log(calc.capabilities());        // ['add', 'multiply']
 await calc.execute('add', 5, 3);        // 8
 
@@ -241,6 +331,8 @@ await calc.execute('add', 5, 3);        // 8
 ### Unit Composition
 
 ```typescript
+import { Unit, createUnitSchema, type UnitProps, type TeachingContract } from '@synet/unit';
+
 // Units can learn from each other
 const mathUnit = MathUnit.create();
 const statsUnit = StatsUnit.create();
@@ -249,7 +341,7 @@ const statsUnit = StatsUnit.create();
 statsUnit.learn([mathUnit.teach()]);
 
 // Now stats unit can do math operations
-await statsUnit.execute('math.add', 10, 20);  // 30
+await statsUnit.execute('math-unit.add', 10, 20);  // 30
 ```
 
 ### Evolution
@@ -263,7 +355,7 @@ const advancedUnit = basicUnit.evolve('scientific-calculator', {
 });
 
 // Lineage is preserved
-console.log(advancedUnit.dna.parent?.name); // 'calculator-unit'
+console.log(advancedUnit.dna.parent?.id); // 'calculator-unit'
 console.log(advancedUnit.capabilities());   // ['add', 'multiply', 'sin', 'cos']
 ```
 
@@ -284,11 +376,14 @@ unit.help();         // How to use me
 Units explicitly choose what to share:
 
 ```typescript
-// Explicit public API
-teach(): Record<string, Function> {
+// Explicit public API via TeachingContract
+teach(): TeachingContract {
   return {
-    publicMethod: this.publicImpl.bind(this),
-    // privateMethod NOT shared - conscious choice
+    unitId: this.dna.id,  // Required for namespacing
+    capabilities: {
+      publicMethod: this.publicImpl.bind(this),
+      // privateMethod NOT shared - conscious choice
+    }
   };
 }
 ```
@@ -315,7 +410,7 @@ const gen2 = gen1.evolve('enhanced-unit');
 const gen3 = gen2.evolve('super-unit');
 
 // Trace lineage
-console.log(gen3.dna.parent?.parent?.name); // BasicUnit
+console.log(gen3.dna.parent?.parent?.id); // BasicUnit
 ```
 
 ## Architecture Benefits
@@ -363,12 +458,14 @@ Clear visibility into unit state and capabilities:
 ```typescript
 console.log(unit.whoami());          // Identity
 console.log(unit.capabilities());    // Current abilities
-console.log(unit.dna.parent?.name);  // Evolution history
+console.log(unit.dna.parent?.id);  // Evolution history
 ```
 
 ## The Vision
 
 Units represent the future of software architecture - components that are not just functional, but conscious. They know themselves, can teach others, learn continuously, and evolve while maintaining their essential identity.
+
+This architecture follows the **22 Unit Architecture Doctrines** that ensure units remain conscious, composable, and evolutionarily stable. From zero dependencies to stateless operations, these principles create software that AI agents can understand, compose, and evolve autonomously.
 
 
 ---
@@ -414,8 +511,9 @@ await vault.execute('credential.issueVC',claims);
 ### Links
 
 - [Technical Documentation](./docs/)
+- [Function-Behaviour-Structure Analysis](./docs/FUNCTION-BEHAVIOUR-STRUCTURE.md) - *How Unit Architecture implements FBS ontology*
 - [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
-- [Doctrine](./DOCTRINE.md) - *The deeper philosophy*
+- [Doctrine](./DOCTRINE.md) - *The 22 architectural principles*
 - [🏗️ Examples](./examples/)
 - [🧪 Tests](./test/)
 - [0en](mailto:0en@synthetism.ai)

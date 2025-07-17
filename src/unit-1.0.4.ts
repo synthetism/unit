@@ -1,9 +1,42 @@
 /**
- * Unit Architecture Interface for @synet/unit v1.0.5
+ * Unit Architecture Interface for @synet/unit v1.0.4
  *
- * 
+ * Major improvements in v1.0.4:
+ * - Teaching/Learning Contract System: Units exchange capabilities through structured contracts
+ * - DNA ID System: Units now have deterministic IDs instead of names for capability resolution
+ * - Namespaced Capabilities: Learned capabilities are namespaced as "unit-id.capability-name"
+ * - Extensible Metadata: Generic metadata interface for capability contracts
+ * - Rewrite-by-Default: Capability conflicts resolved by overwriting (intentional updates)
+ * - Selective Teaching: Units can teach specific capabilities with teach(['capability1', 'capability2'])
+ * - Cleanup: Removed deprecated error handling methods (_markFailed, fail, error, stack)
+ *
+ * This is the foundational interface that defines what a Unit is.
+ * All units in the Synet ecosystem should implement this interface.
+ *
+ * Key principles:
+ * - Units are living beings in code that can teach and learn from each other
+ * - They have DNA (schema) with deterministic IDs for capability resolution
+ * - They exchange capabilities through structured contracts (DNA + implementation + metadata)
+ * - Minimal interface, maximum flexibility through composition
+ * - Simple structure of thinking, not replacement of thinking
+ * - Built for rapid execution, not enterprise edge cases
+ * Example usage:
+ * ```typescript
+ * // Create units with deterministic IDs
+ * const signer = Signer.create();  // DNA: { id: 'signer', version: '1.0.0' }
+ * const key = Key.create();        // DNA: { id: 'key', version: '1.0.0' }
+ *
+ * // Teaching and learning with contracts
+ * const contracts = signer.teach(['sign', 'verify']);
+ * key.learn(contracts);
+ *
+ * // Namespaced capability execution
+ * key.execute('signer.sign', data);     // Explicit namespace
+ * key.execute('publicKey');             // Native capability
+ * ```
+ *
  * @author 0en
- * @version 1.0.5
+ * @version 1.0.4
  * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
 
@@ -26,13 +59,6 @@ export interface UnitSchema {
   readonly version: string;
   /** Parent DNA this unit evolved from (evolution lineage) */
   readonly parent?: UnitSchema;
-}
-
-export interface UnitProps {
-  dna: UnitSchema;  
-  created?: Date;
-  metadata?: Record<string, unknown>;
-  [x: string]: unknown;
 }
 
 /**
@@ -58,11 +84,11 @@ export interface IUnit {
   /** Get unit identity as string */
   whoami(): string;
 
+  /** @deprecated Use `can` instead */
+  capableOf(command: string): boolean;
+
   /** Check if unit can execute a command (checks dynamic capabilities) */
   can(command: string): boolean;
-
-  /** @deprecated Use `can()` instead */
-  capableOf(command: string): boolean;
 
   /** Get all current capabilities (always available) */
   capabilities(): string[];
@@ -87,6 +113,22 @@ export interface IUnit {
     name: string,
     additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
   ): IUnit;
+}
+
+/**
+ * Unit creation result - handles success/failure of unit creation
+ */
+export type UnitResult<T extends IUnit> = T | null;
+
+/**
+ * Unit factory interface - all unit classes should implement this
+ */
+export interface UnitFactory<T extends IUnit> {
+  /**
+   * Create a new unit instance with validation
+   * Returns null if creation fails, forcing error handling upfront
+   */
+  create(...args: unknown[]): UnitResult<T>;
 }
 
 /**
@@ -140,9 +182,10 @@ export abstract class ValueObject<T> {
  * }
  * ```
  */
-export abstract class Unit<T extends UnitProps> extends ValueObject<T> implements IUnit {
-
+export abstract class Unit implements IUnit {
+  protected _dna: UnitSchema;
   protected _capabilities = new Map<string, (...args: unknown[]) => unknown>();
+  protected _created = true;
 
   /**
    * Protected constructor - prevents direct instantiation
@@ -156,15 +199,16 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    * - Prevention of invalid unit states
    * - Clear architectural boundaries
    */
-  protected constructor(props: T) {
-    
-    super(props);
-
-    
+  protected constructor(schema: UnitSchema) {
+    this._dna = { ...schema };
   }
 
   get dna(): UnitSchema {
-    return this.props.dna;  // ✅ Direct props access, no hidden state
+    return this._dna;
+  }
+
+  get created(): boolean {
+    return this._created;
   }
 
   abstract whoami(): string;
@@ -200,8 +244,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
 
   abstract teach(): TeachingContract;
 
-  /* Learn base method. Override if needed. _capabilities are mutable.
-  */
   learn(contracts: TeachingContract[]): void {
     for (const contract of contracts) {
       for (const [cap, impl] of Object.entries(contract.capabilities)) {
@@ -213,43 +255,30 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
       }
     }
   }
-  /*  Evolve for stateless capabilities acquisition
-  */
+
   evolve(
-  name: string,
-  additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
-): Unit<T> {
-  // Create new DNA with evolution lineage
+    name: string,
+    additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
+  ): Unit {
+    // Create new DNA with evolution lineage
     const newDNA: UnitSchema = {
       id: name,
       version: this._getNextVersion(),
-      parent: { ...this.props.dna },
+      parent: { ...this._dna }, // Current DNA becomes parent
     };
-
-    // Create new props with evolved DNA
-    const evolvedProps: T = {
-      ...this.props,
-      dna: newDNA
-    } as T;
-
-    // Create new instance of same type with evolved props
-    const evolved = new (this.constructor as new (props: T) => Unit<T>)(evolvedProps);
-
-    // Copy existing capabilities to new instance
-    for (const [capName, capImpl] of this._capabilities.entries()) {
-      evolved._addCapability(capName, capImpl);
-    }
 
     // Add additional capabilities if provided
     if (additionalCapabilities) {
       for (const [capName, capImpl] of Object.entries(additionalCapabilities)) {
-        evolved._addCapability(capName, capImpl);
+        this._capabilities.set(capName, capImpl);
       }
     }
 
-    return evolved;
-  }
+    // Update DNA to new evolved version
+    this._dna = newDNA;
 
+    return this;
+  }
 
   /**
    * Protected method to add capabilities
@@ -272,7 +301,7 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    * Protected method to generate next version for evolution
    */
   private _getNextVersion(): string {
-    const current = this.props.dna.version;
+    const current = this._dna.version;
     // Simple version increment - can be enhanced later
     const versionParts = current.split(".");
     if (versionParts.length >= 3) {

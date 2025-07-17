@@ -13,6 +13,7 @@ export {
   type IUnit,
   type UnitSchema,
   type TeachingContract,
+  type UnitProps,
   // Base classes
   ValueObject,
   Unit,
@@ -20,3 +21,4 @@ export {
   createUnitSchema,
   validateUnitSchema,
 } from "./unit";
+
