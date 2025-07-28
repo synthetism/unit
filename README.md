@@ -12,8 +12,8 @@
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
-version: 1.0.5
-description: Living Architecture for Conscious Code                                              
+version: 1.0.6
+description: AI-First Living Architecture for Conscious Code                                              
                                               
 ```
 
@@ -45,7 +45,7 @@ class MessyUnit {
 - **Black box complexity** where components can't explain themselves
 - **Brittle evolution** where changes break existing functionality
 - **Dependency entanglement** - everything depends on everything 
-- **Abstraction cathedrals** - managers, agents (managers of managers), services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic
+- **Abstraction cathedrals** - managers, agents, services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic
 - **Street Magic** - rabbit hole of hidden interactions 
 
 ## The Solution
@@ -281,6 +281,33 @@ class CalculatorUnit extends Unit<CalculatorProps> {
       capabilities: {
         add: this.addImpl.bind(this),
         multiply: this.multiplyImpl.bind(this)
+      },
+      // NEW in v1.0.6: Tool schemas for AI provider integration
+      tools: {
+        add: {
+          name: 'add',
+          description: 'Add two numbers with specified precision',
+          parameters: {
+            type: 'object',
+            properties: {
+              a: { type: 'number', description: 'First number' },
+              b: { type: 'number', description: 'Second number' }
+            },
+            required: ['a', 'b']
+          }
+        },
+        multiply: {
+          name: 'multiply', 
+          description: 'Multiply two numbers with specified precision',
+          parameters: {
+            type: 'object',
+            properties: {
+              a: { type: 'number', description: 'First number' },
+              b: { type: 'number', description: 'Second number' }
+            },
+            required: ['a', 'b']
+          }
+        }
       }
     };
   }
@@ -408,8 +435,6 @@ const gen3 = gen2.evolve('super-unit');
 console.log(gen3.dna.parent?.parent?.id); // BasicUnit
 ```
 
-## Architecture Benefits
-
 ### **Composability**
 
 Units can be combined in unlimited ways without coupling:
@@ -455,6 +480,123 @@ console.log(unit.capabilities());    // Current abilities
 console.log(unit.dna.parent?.id);  // Evolution history
 ```
 
+
+## AI Tool Integration (NEW in v1.0.6)
+
+Units can now provide structured tool schemas for AI agent integration, enabling sophisticated AI-driven capability learning and execution.
+
+### Tool Schemas
+
+Tool schemas define parameter structures for AI providers, following JSON Schema specification:
+
+```typescript
+interface ToolSchema {
+  name: string;                    // Tool name (must match capability)
+  description: string;             // Human-readable description
+  parameters: {                    // JSON Schema parameter definition
+    type: 'object';
+    properties: Record<string, {
+      type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+      description: string;
+      enum?: string[];
+    }>;
+    required?: string[];
+  };
+}
+```
+
+### Enhanced Teaching Contracts
+
+Teaching contracts now support optional tool schemas for rich AI integration:
+
+```typescript
+interface TeachingContract {
+  unitId: string;
+  capabilities: Record<string, (...args: unknown[]) => unknown>;
+  tools?: Record<string, ToolSchema>;  // NEW: Optional AI tool schemas
+}
+
+// Example with schemas
+weather.teach() // Returns:
+{
+  unitId: 'weather',
+  capabilities: {
+    getCurrentWeather: (location: string) => Promise<WeatherData>,
+    getForecast: (location: string, days: number) => Promise<ForecastData>
+  },
+  tools: {
+    getCurrentWeather: {
+      name: 'getCurrentWeather',
+      description: 'Get current weather conditions for a location',
+      parameters: {
+        type: 'object',
+        properties: {
+          location: { type: 'string', description: 'City name, e.g., "London"' },
+          units: { type: 'string', description: 'Temperature units', enum: ['metric', 'imperial'] }
+        },
+        required: ['location']
+      }
+    }
+  }
+}
+```
+
+### Schema Access Methods
+
+Units provide methods to access learned tool schemas:
+
+```typescript
+// Check available schemas
+unit.schemas();                     // ['weather.getCurrentWeather', 'weather.getForecast']
+
+// Check if specific schema exists  
+unit.hasSchema('weather.getCurrentWeather');  // true
+
+// Get schema details
+const schema = unit.getSchema('weather.getCurrentWeather');
+console.log(schema.description);    // 'Get current weather conditions for a location'
+```
+
+### AI Provider Integration
+
+Tool schemas enable seamless integration with AI providers and frameworks:
+
+```typescript
+import { AI } from '@synet/ai';
+import { WeatherUnit } from '@synet/weather';
+
+// Create AI unit and weather unit
+const ai = AI.openai({ apiKey: 'sk-...' });
+const weather = WeatherUnit.create({ apiKey: 'weather-key' });
+
+// AI learns weather capabilities with full schema support
+ai.learn([weather.teach()]);
+
+// AI can now use weather tools with proper parameter validation
+const response = await ai.call('What is the weather in Tokyo today?', {
+  useTools: true  // AI automatically uses learned tool schemas
+});
+
+// Response includes weather data retrieved via tool calls:
+// "The current weather in Tokyo is 25°C with clear skies..."
+```
+
+### Backward Compatibility
+
+Units without tool schemas continue to work normally:
+
+```typescript
+// Traditional unit-to-unit learning (no schemas needed)
+cryptoUnit.learn([signerUnit.teach()]);
+await cryptoUnit.execute('signer.sign', data);  // Works perfectly
+
+// AI integration without schemas (basic capability learning)
+ai.learn([legacyUnit.teach()]);  // Still works, just no rich tool calling
+```
+
+The tool schema system is completely optional - units can provide rich AI integration when needed while maintaining full compatibility with existing Unit Architecture patterns.
+
+
 ## The Vision
 
 Units represent the future of software architecture - components that are not just functional, but conscious. They know themselves, can teach others, learn continuously, and evolve while maintaining their essential identity.
@@ -499,6 +641,53 @@ await vault.execute('credential.issueVC',claims);
 *Each line: a conscious entity. Each component: self-aware. Each system: alive.*
 
 **Welcome to conscious software architecture. Welcome to Synet.**
+
+---
+
+## API Reference
+
+### Core Interfaces
+
+```typescript
+// NEW in v1.0.6: Tool Schema for AI integration
+interface ToolSchema {
+  name: string;
+  description: string;
+  parameters: {
+    type: 'object';
+    properties: Record<string, {
+      type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+      description: string;
+      enum?: string[];
+    }>;
+    required?: string[];
+  };
+}
+
+// Enhanced Teaching Contract
+interface TeachingContract {
+  unitId: string;
+  capabilities: Record<string, (...args: unknown[]) => unknown>;
+  tools?: Record<string, ToolSchema>;  // Optional AI tool schemas
+}
+
+// Core Unit Interface
+interface IUnit {
+  whoami(): string;
+  can(command: string): boolean;
+  capabilities(): string[];
+  help(): void;
+  execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
+  teach(): TeachingContract;
+  learn(contracts: TeachingContract[]): void;
+  evolve(name: string, additionalCapabilities?: Record<string, Function>): IUnit;
+  
+  // NEW in v1.0.6: Schema access methods
+  schemas(): string[];
+  hasSchema(tool: string): boolean;
+  getSchema(tool: string): ToolSchema | undefined;
+}
+```
 
 ---
 

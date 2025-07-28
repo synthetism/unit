@@ -1,9 +1,9 @@
 /**
- * Unit Architecture Interface for @synet/unit v1.0.6
+ * Unit Architecture Interface for @synet/unit v1.0.5
  *
  * 
  * @author 0en
- * @version 1.0.6
+ * @version 1.0.5
  * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
 
@@ -13,27 +13,6 @@
  */
 export interface UnitMetadata {
   [x: string]: unknown;
-}
-
-/**
- * Tool Schema interface - defines parameter structure for tool calling
- * NEW in v1.0.6 for AI-first Unit Architecture
- */
-export interface ToolSchema {
-  /** Tool name - must match capability key */
-  name: string;
-  /** Human-readable description of what this tool does */
-  description: string;
-  /** Parameter structure following JSON Schema specification */
-  parameters: {
-    type: 'object';
-    properties: Record<string, {
-      type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-      description: string;
-      enum?: string[];
-    }>;
-    required?: string[];
-  };
 }
 
 /**
@@ -57,22 +36,14 @@ export interface UnitProps {
 }
 
 /**
- * Teaching contract interface - enhanced contract between units
- * Contains unit ID, capabilities map, and optional tool schemas
- * Enhanced in v1.0.6 for AI-first capabilities
+ * Teaching contract interface - simplified contract between units
+ * Contains unit ID and capabilities map
  */
 export interface TeachingContract {
   /** ID of the unit providing these capabilities */
   unitId: string;
   /** Map of capability name to implementation */
   capabilities: Record<string, (...args: unknown[]) => unknown>;
-  /** 
-   * Tool schemas for AI provider integration (NEW in v1.0.6)
-   * Optional - units without schemas still work for unit-to-unit learning
-   * Required for rich AI tool calling experiences
-   * Keys must match capability keys, schema.name must match capability name
-   */
-  tools?: Record<string, ToolSchema>;
 }
 
 /**
@@ -90,12 +61,18 @@ export interface IUnit {
   /** Check if unit can execute a command (checks dynamic capabilities) */
   can(command: string): boolean;
 
+  /** @deprecated Use `can()` instead */
+  capableOf(command: string): boolean;
+
   /** Get all current capabilities (always available) */
   capabilities(): string[];
 
   /** Show help - flexible implementation */
   help(): void;
- 
+
+  /** Get detailed explanation of current state */
+  explain?(): string;
+
   /** Execute a command (uses dynamic capabilities) */
   execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
 
@@ -166,7 +143,6 @@ export abstract class ValueObject<T> {
 export abstract class Unit<T extends UnitProps> extends ValueObject<T> implements IUnit {
 
   protected _capabilities = new Map<string, (...args: unknown[]) => unknown>();
-  protected _tools = new Map<string, ToolSchema>(); // NEW in v1.0.6: Tool schemas
 
   /**
    * Protected constructor - prevents direct instantiation
@@ -180,8 +156,11 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    * - Prevention of invalid unit states
    * - Clear architectural boundaries
    */
-  protected constructor(props: T) {    
-    super(props);    
+  protected constructor(props: T) {
+    
+    super(props);
+
+    
   }
 
   get dna(): UnitSchema {
@@ -193,15 +172,20 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
   can(command: string): boolean {
     return this._capabilities.has(command);
   }
+  /** @deprecated, use can() instead */
+  capableOf(command: string): boolean {
+    return this._capabilities.has(command);
+  }
+
   /**
    * Get current runtime capabilities (what the unit can actually do now)
    * Abstract method - must be implemented by each unit
    */
-  capabilities(): string[] {
-    return Array.from(this._capabilities.keys());
-  }
+  abstract capabilities(): string[];
 
   abstract help(): void;
+
+  explain?(): string;
 
   async execute<R = unknown>(
     commandName: string,
@@ -217,7 +201,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
   abstract teach(): TeachingContract;
 
   /* Learn base method. Override if needed. _capabilities are mutable.
-   * Enhanced in v1.0.6 to support tool schemas with validation
   */
   learn(contracts: TeachingContract[]): void {
     for (const contract of contracts) {
@@ -227,22 +210,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
 
         // Store the implementation with namespace
         this._capabilities.set(capabilityKey, impl);
-
-        // NEW in v1.0.6: Store tool schema if provided with validation
-        if (contract.tools?.[cap]) {
-          const toolSchema = contract.tools[cap];
-          
-          // Validate schema name matches capability
-          if (toolSchema.name !== cap) {
-            throw new Error(`[${this.dna.id}] Tool schema name '${toolSchema.name}' must match capability '${cap}' in unit '${contract.unitId}'`);
-          }
-          
-          // Store with namespaced capability key but preserve original name in schema
-          this._tools.set(capabilityKey, {
-            ...toolSchema,
-            name: capabilityKey // Update name to namespaced version for provider use
-          });
-        }
       }
     }
   }
@@ -273,11 +240,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
       evolved._addCapability(capName, capImpl);
     }
 
-    // Copy existing tool schemas to new instance (NEW in v1.0.6)
-    for (const [capName, schema] of this._tools.entries()) {
-      evolved._tools.set(capName, schema);
-    }
-
     // Add additional capabilities if provided
     if (additionalCapabilities) {
       for (const [capName, capImpl] of Object.entries(additionalCapabilities)) {
@@ -304,28 +266,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    */
   protected _getAllCapabilities(): string[] {
     return Array.from(this._capabilities.keys());
-  }
-
-  /**
-   * Get all schema names (NEW in v1.0.6)
-   * Returns array of schema names available for this unit
-   */
-  schemas(): string[] {
-    return Array.from(this._tools.keys());
-  }
-
-  /**
-   * Check if schema exists (NEW in v1.0.6)
-   */
-  hasSchema(tool: string): boolean {
-    return this._tools.has(tool);
-  }
-
-  /**
-   * Get specific tool schema (NEW in v1.0.6)
-   */
-  getSchema(tool: string): ToolSchema | undefined {
-    return this._tools.get(tool);
   }
 
   /**

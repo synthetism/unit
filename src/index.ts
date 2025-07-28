@@ -14,6 +14,7 @@ export {
   type UnitSchema,
   type TeachingContract,
   type UnitProps,
+  type ToolSchema,
   // Base classes
   ValueObject,
   Unit,
