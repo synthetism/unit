@@ -16,12 +16,21 @@ import type { Schema, ToolSchema } from './schema.js';
  * Validator consciousness class - manages unit validation
  * Core component of consciousness trinity (Capabilities + Schema + Validator)
  */
+
+interface ValidatorProps {
+    unitId: string,
+    capabilities: Capabilities,
+    schema: Schema
+};
+
 export class Validator {
+  private readonly unitId: string;
   private readonly capabilities: Capabilities;
   private readonly schema: Schema;
   private readonly options: { strictMode?: boolean };
 
   constructor(
+    unitId: string,
     capabilities: Capabilities,
     schema: Schema,
     options: { strictMode?: boolean } = {}
@@ -29,6 +38,9 @@ export class Validator {
     this.capabilities = capabilities;
     this.schema = schema;
     this.options = options;
+    this.unitId = unitId;
+    // Store properties for easy access
+ 
   }
 
   /**
@@ -40,7 +52,7 @@ export class Validator {
     schema: Schema;
     strictMode?: boolean;
   }): Validator {
-    const validator = new Validator(config.capabilities, config.schema, {
+    const validator = new Validator(config.unitId,config.capabilities, config.schema, {
       strictMode: config.strictMode
     });
     
@@ -61,7 +73,7 @@ export class Validator {
     
     // Get capability implementation
     if (!this.capabilities.has(commandName)) {
-      throw new Error(`[Validator] Unknown command: ${commandName}. Available: ${this.capabilities.list().join(', ')}`);
+      throw new Error(`[${this.unitId}] Validator - Unknown command: ${commandName}. Available: ${this.capabilities.list().join(', ')}`);
     }
     
     // Get schema for validation
@@ -71,7 +83,7 @@ export class Validator {
       // Validate input
       const inputValid = this.validateInput(input, schema.parameters);
       if (!inputValid) {
-        throw new Error(`[Validator] Invalid input for ${commandName}: failed schema validation`);
+        throw new Error(`[${this.unitId}] Validator - Invalid input for ${commandName}: failed schema validation`);
       }
     }
     
@@ -82,43 +94,11 @@ export class Validator {
     if (schema?.response && this.options.strictMode) {
       const outputValid = this.validateOutput(result, schema.response);
       if (!outputValid) {
-        throw new Error(`[Validator] Invalid output from ${commandName}: failed schema validation`);
+        throw new Error(`[${this.unitId}] Validator - Invalid output from ${commandName}: failed schema validation`);
       }
     }
     
     return result;
-  }
-
-  /**
-   * Validate teaching contract compatibility
-   */
-  validateCompatibility(contract: TeachingContract): { isCompatible: boolean; reason?: string } {
-    try {
-      // Check if contract has required consciousness components
-      if (!contract.capabilities || !contract.schema) {
-        return { isCompatible: false, reason: 'Missing required consciousness components' };
-      }
-
-      // Validate that each capability has corresponding schema
-      const capabilities = contract.capabilities.list();
-      const schemas = contract.schema.list();
-      
-      for (const capName of capabilities) {
-        if (!schemas.includes(capName)) {
-          return { 
-            isCompatible: false, 
-            reason: `Capability '${capName}' missing corresponding schema` 
-          };
-        }
-      }
-      
-      return { isCompatible: true };
-    } catch (error) {
-      return { 
-        isCompatible: false, 
-        reason: error instanceof Error ? error.message : String(error) 
-      };
-    }
   }
 
   /**

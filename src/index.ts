@@ -5,7 +5,7 @@
  * This package provides the core interfaces and base classes that all units
  * should implement.
  *
- * @author Synet Team
+ * @author 0en, SYNET ALPHA
  */
 
 export {
@@ -21,5 +21,5 @@ export {
   // Utility functions
   createUnitSchema,
   validateUnitSchema,
-} from "./unit-1.0.7-dev";
+} from "./unit";
 

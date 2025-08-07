@@ -217,15 +217,11 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
   // Learning with consciousness evolution  
   learn(contracts: TeachingContract[]): void {
     for (const contract of contracts) {
-      // Validate consciousness compatibility first
-      const compatibility = this._unit.validator.validateCompatibility(contract);
-      if (!compatibility.isCompatible) {
-        throw new Error(`[${this.dna.id}] Consciousness incompatibility: ${compatibility.reason}`);
-      }
 
       // Learn capabilities and schemas
       this._unit.capabilities.learn([contract]);
       this._unit.schema.learn([contract]);
+      this._unit.validator.learn([contract]);
     }
   }
 

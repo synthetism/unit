@@ -34,12 +34,19 @@ export class Capabilities {
   }
 
   /**
-   * Add a single capability
+   * Add a single capability (throws if exists)
    */
   add(name: string, fn: (...args: unknown[]) => unknown): void {
     if (this.map.has(name)) {
       throw new Error(`[${this.unitId}] Capability '${name}' already exists`);
     }
+    this.map.set(name, fn);
+  }
+
+  /**
+   * Set a capability (overwrites if exists)
+   */
+  set(name: string, fn: (...args: unknown[]) => unknown): void {
     this.map.set(name, fn);
   }
 
@@ -93,7 +100,7 @@ export class Capabilities {
       const capabilities = contract.capabilities.toRecord();
       for (const [name, fn] of Object.entries(capabilities)) {
         const namespacedName = `${contract.unitId}.${name}`;
-        this.add(namespacedName, fn);
+        this.set(namespacedName, fn); // Use set() to allow overwriting
       }
     }
   }
