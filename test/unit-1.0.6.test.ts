@@ -279,11 +279,11 @@ describe('Unit Architecture v1.0.6 - AI Tool Schema Support', () => {
       expect(contract.capabilities).toHaveProperty('divide');
       
       // v1.0.6: Tool schemas
-      expect(contract.tools).toBeDefined();
-      expect(contract.tools?.add).toBeDefined();
-      expect(contract.tools?.add.name).toBe('add');
-      expect(contract.tools?.add.description).toBe('Add two numbers together with configurable precision');
-      expect(contract.tools?.add.parameters.required).toEqual(['a', 'b']);
+      expect(contract.schema).toBeDefined();
+      expect(contract.schema?.add).toBeDefined();
+      expect(contract.schema?.add.name).toBe('add');
+      expect(contract.schema?.add.description).toBe('Add two numbers together with configurable precision');
+      expect(contract.schema?.add.parameters.required).toEqual(['a', 'b']);
     });
 
     test('should support contracts without tool schemas (backward compatibility)', () => {
@@ -292,7 +292,7 @@ describe('Unit Architecture v1.0.6 - AI Tool Schema Support', () => {
 
       expect(contract.unitId).toBe('legacy');
       expect(contract.capabilities).toHaveProperty('process');
-      expect(contract.tools).toBeUndefined(); // No schemas in legacy units
+      expect(contract.schema).toBeUndefined(); // No schemas in legacy units
     });
   });
 
@@ -352,7 +352,7 @@ describe('Unit Architecture v1.0.6 - AI Tool Schema Support', () => {
       learner.learn([calculator.teach()]);
 
       // tools() - get all tool names
-      const allToolNames = learner.schemas();
+      const allToolNames = learner.schema();
       expect(allToolNames.length).toBe(3); // add, multiply, divide
       expect(allToolNames).toContain('calculator.add');
       expect(allToolNames).toContain('calculator.multiply');
@@ -377,8 +377,8 @@ describe('Unit Architecture v1.0.6 - AI Tool Schema Support', () => {
       
       learner.learn([calculator.teach()]);
 
-      const tools1 = learner.schemas();
-      const tools2 = learner.schemas();
+      const tools1 = learner.schema();
+      const tools2 = learner.schema();
 
       // Should be different instances (copies)
       expect(tools1).not.toBe(tools2);
@@ -436,8 +436,8 @@ describe('Unit Architecture v1.0.6 - AI Tool Schema Support', () => {
       expect(capabilities).toContain('weather.getForecast');
 
       // 2. Check all tool schemas are available
-      const toolNames = aiLearner.schemas();
-      expect(toolNames.length).toBe(5);
+      const toolNames = aiLearner.schema();
+      expect(toolNames.list().length).toBe(5);
       
       // 3. Verify schema content for tool definition conversion
       const addSchema = aiLearner.getSchema('calculator.add');

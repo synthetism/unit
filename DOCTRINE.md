@@ -3,10 +3,10 @@ title: UNIT ARCHITECTURE DOCTRINE
 description: Unit development practical philosophy.
 createdAt: 15.07.25
 updatedAt: 17.07.25
-version: 1.0.5
+version: 1.0.6
 ---
 
-# **SYNET UNIT ARCHITECTURE DOCTRINE**
+# ** UNIT ARCHITECTURE DOCTRINE**
 
 ## **Introduction: AI-First Software Consciousness**
 
@@ -675,7 +675,7 @@ teach(): TeachingContract {
 }
 ```
 
-# 20: UNITS DO ONE THING AND DO IT WELL.
+# 20: UNITS DO ONE THING, DO IT WELL AND TEACH IT
 
 "Units must function at their native capability level even without learning"
 
@@ -706,9 +706,19 @@ class CredentialUnit extends Unit<CredentialProps> {
     
     throw new Error(`[${this.dna.id}] Cannot sign credentials - learn from: Signer.create().teach()`);
   }
+
+  teach(): TeachingContract {
+	return {	
+	unitId: this.dna.id,
+	  capabilities: {
+      // Static-like functions - direct binding
+      issueCredential: this.issueCredential.bind(this),
+      createCredential: this.createCredential.bind(this),     
+    }
+  }
 }
 
-// ❌ Avoid - Unit is useless without learning
+// ❌ Avoid - Unit is useless without teaching one thing.
 class BadCredentialUnit extends Unit<CredentialProps> {
   async createCredential(): Promise<never> {
     throw new Error('Cannot create credentials without signer');  // Broken baseline
@@ -783,6 +793,8 @@ class BadVaultUnit extends Unit<VaultProps> {
 "Operations are stateless functions over immutable props and mutable capabilities - capabilities grow, operations don't mutate"
 
 Rule: Operations should be deterministic given current state (props + capabilities), with capability growth explicit and operation logic pure. Learn capabilities, do not mutate private states.
+
+**Raison d'être for mutable states:** Complex units with async operations and need for initialization, can use controlled private _initialized. 
 
 ```typescript
 // ✅ STATELESS UNIT - Deterministic based on visible state

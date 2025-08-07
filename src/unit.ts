@@ -1,11 +1,18 @@
 /**
- * Unit Architecture Interface for @synet/unit v1.0.6
+ * Unit Architecture Interface for @synet/unit v1.0.7
  *
  * 
  * @author 0en
- * @version 1.0.6
+ * @version 1.0.7
  * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
+
+import { Capabilities } from './capabilities.js';
+import { Schema, type ToolSchema } from './schema.js';
+import { Validator } from './validator.js';
+
+// Re-export consciousness classes for convenience
+export { Capabilities, Schema, Validator, type ToolSchema };
 
 /**
  * Unit metadata interface - extensible metadata for capability contracts
@@ -13,27 +20,6 @@
  */
 export interface UnitMetadata {
   [x: string]: unknown;
-}
-
-/**
- * Tool Schema interface - defines parameter structure for tool calling
- * NEW in v1.0.6 for AI-first Unit Architecture
- */
-export interface ToolSchema {
-  /** Tool name - must match capability key */
-  name: string;
-  /** Human-readable description of what this tool does */
-  description: string;
-  /** Parameter structure following JSON Schema specification */
-  parameters: {
-    type: 'object';
-    properties: Record<string, {
-      type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-      description: string;
-      enum?: string[];
-    }>;
-    required?: string[];
-  };
 }
 
 /**
@@ -57,52 +43,62 @@ export interface UnitProps {
 }
 
 /**
+ * Consciousness management interfaces (v1.0.7)
+ */
+export interface UnitCore {
+  capabilities: Capabilities;
+  schema: Schema;
+  validator: Validator;
+}
+
+/**
  * Teaching contract interface - enhanced contract between units
- * Contains unit ID, capabilities map, and optional tool schemas
- * Enhanced in v1.0.6 for AI-first capabilities
+ * Enhanced in v1.0.7 for consciousness trinity architecture
  */
 export interface TeachingContract {
   /** ID of the unit providing these capabilities */
   unitId: string;
-  /** Map of capability name to implementation */
-  capabilities: Record<string, (...args: unknown[]) => unknown>;
-  /** 
-   * Tool schemas for AI provider integration (NEW in v1.0.6)
-   * Optional - units without schemas still work for unit-to-unit learning
-   * Required for rich AI tool calling experiences
-   * Keys must match capability keys, schema.name must match capability name
-   */
-  tools?: Record<string, ToolSchema>;
+  /** Capabilities consciousness unit */
+  capabilities: Capabilities;
+  /** Schema consciousness unit */
+  schema: Schema;
+  /** Validator consciousness unit */
+  validator: Validator;
 }
 
 /**
  * Core Unit interface - all units must implement this
- *
- * Units are self-validating and carry their creation status.
- * They use dynamic capabilities instead of fixed commands.
- * Invalid units can still exist but report their failure state.
+ * Updated for consciousness trinity architecture v1.0.7
  */
 export interface IUnit {
-
   /** Get unit identity as string */
   whoami(): string;
 
   /** Check if unit can execute a command (checks dynamic capabilities) */
   can(command: string): boolean;
 
-  /** Get all current capabilities (always available) */
-  capabilities(): string[];
+  /** Get all current capabilities (consciousness delegation) */
+  getCapabilities(): string[];
+
+  /** Get capabilities consciousness unit */
+  capabilities(): Capabilities;
+
+  /** Get schema consciousness unit */
+  schema(): Schema;
+
+  /** Get validator consciousness unit */
+  validator(): Validator;
 
   /** Show help - flexible implementation */
   help(): void;
  
-  /** Execute a command (uses dynamic capabilities) */
+  /** Execute a command (uses consciousness capabilities) */
   execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
 
-  /** Share capabilities with other units using teaching contracts */
+  /** Share capabilities with other units using consciousness contracts */
   teach(): TeachingContract;
 
-  /** Absorb capabilities from other units using teaching contracts */
+  /** Absorb capabilities from other units using consciousness contracts */
   learn(contracts: TeachingContract[]): void;
 
   /** Create evolved unit with new capabilities */
@@ -110,6 +106,12 @@ export interface IUnit {
     name: string,
     additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
   ): IUnit;
+
+  /** Check if unit has specific schema */
+  hasSchema(tool: string): boolean;
+
+  /** Get specific tool schema */
+  getSchema(tool: string): ToolSchema | undefined;
 }
 
 /**
@@ -164,95 +166,86 @@ export abstract class ValueObject<T> {
  * ```
  */
 export abstract class Unit<T extends UnitProps> extends ValueObject<T> implements IUnit {
-
-  protected _capabilities = new Map<string, (...args: unknown[]) => unknown>();
-  protected _tools = new Map<string, ToolSchema>(); // NEW in v1.0.6: Tool schemas
+  protected readonly _unit: UnitCore;
 
   /**
    * Protected constructor - prevents direct instantiation
-   *
-   * Units MUST use a private constructor in their implementation
-   * and provide a static create() method as the public interface.
-   *
-   * This ensures:
-   * - Proper validation during creation
-   * - Consistent lifecycle management
-   * - Prevention of invalid unit states
-   * - Clear architectural boundaries
+   * Consciousness trinity built during construction
    */
   protected constructor(props: T) {    
-    super(props);    
+    super(props);
+    this._unit = this.build();
+    
+    // Validate consciousness integrity immediately
+    if (!this._unit.validator.isValid()) {
+      throw new Error(`[${this.dna.id}] Invalid consciousness architecture`);
+    }
   }
 
+  /**
+   * Abstract method to build consciousness trinity
+   * Each unit must implement this to define its consciousness components
+   */
+  protected abstract build(): UnitCore;
+
+  /** Abstract methods for consciousness trinity access */
+  abstract capabilities(): Capabilities;
+  abstract schema(): Schema;  
+  abstract validator(): Validator;
+
   get dna(): UnitSchema {
-    return this.props.dna;  // ✅ Direct props access, no hidden state
+    return this.props.dna;
   }
 
   abstract whoami(): string;
-
-  can(command: string): boolean {
-    return this._capabilities.has(command);
-  }
-  /**
-   * Get current runtime capabilities (what the unit can actually do now)
-   * Abstract method - must be implemented by each unit
-   */
-  capabilities(): string[] {
-    return Array.from(this._capabilities.keys());
-  }
-
   abstract help(): void;
-
-  async execute<R = unknown>(
-    commandName: string,
-    ...args: unknown[]
-  ): Promise<R> {
-    const impl = this._capabilities.get(commandName);
-    if (!impl) {
-      throw new Error(`Unknown command: ${commandName}`);
-    }
-    return impl(...args) as R;
-  }
-
   abstract teach(): TeachingContract;
 
-  /* Learn base method. Override if needed. _capabilities are mutable.
-   * Enhanced in v1.0.6 to support tool schemas with validation
-  */
+  // Consciousness delegation methods
+  can(command: string): boolean {
+    return this._unit.capabilities.has(command);
+  }
+
+  getCapabilities(): string[] {
+    return this._unit.capabilities.list();
+  }
+
+  async execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R> {
+    return this._unit.capabilities.execute<R>(commandName, ...args);
+  }
+
+  // Learning with consciousness evolution  
   learn(contracts: TeachingContract[]): void {
     for (const contract of contracts) {
-      for (const [cap, impl] of Object.entries(contract.capabilities)) {
-        // Create namespaced capability key: "unit-id.capability-name"
-        const capabilityKey = `${contract.unitId}.${cap}`;
-
-        // Store the implementation with namespace
-        this._capabilities.set(capabilityKey, impl);
-
-        // NEW in v1.0.6: Store tool schema if provided with validation
-        if (contract.tools?.[cap]) {
-          const toolSchema = contract.tools[cap];
-          
-          // Validate schema name matches capability
-          if (toolSchema.name !== cap) {
-            throw new Error(`[${this.dna.id}] Tool schema name '${toolSchema.name}' must match capability '${cap}' in unit '${contract.unitId}'`);
-          }
-          
-          // Store with namespaced capability key but preserve original name in schema
-          this._tools.set(capabilityKey, {
-            ...toolSchema,
-            name: capabilityKey // Update name to namespaced version for provider use
-          });
-        }
+      // Validate consciousness compatibility first
+      const compatibility = this._unit.validator.validateCompatibility(contract);
+      if (!compatibility.isCompatible) {
+        throw new Error(`[${this.dna.id}] Consciousness incompatibility: ${compatibility.reason}`);
       }
+
+      // Learn capabilities and schemas
+      this._unit.capabilities.learn([contract]);
+      this._unit.schema.learn([contract]);
     }
   }
-  /*  Evolve for stateless capabilities acquisition
-  */
+
+  hasSchema(tool: string): boolean {
+    return this._unit.schema.has(tool);
+  }
+
+  /**
+   * Get specific tool schema
+   */
+  getSchema(tool: string): ToolSchema | undefined {
+    return this._unit.schema.get(tool);
+  }
+
+  // Evolution with consciousness trinity
   evolve(
-  name: string,
-  additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
-): Unit<T> {
-  // Create new DNA with evolution lineage
+    name: string,
+    additionalCapabilities?: Record<string, (...args: unknown[]) => unknown>,
+  ): IUnit {
+    // Create new DNA with evolution lineage
     const newDNA: UnitSchema = {
       id: name,
       version: this._getNextVersion(),
@@ -268,65 +261,52 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
     // Create new instance of same type with evolved props
     const evolved = new (this.constructor as new (props: T) => Unit<T>)(evolvedProps);
 
-    // Copy existing capabilities to new instance
-    for (const [capName, capImpl] of this._capabilities.entries()) {
-      evolved._addCapability(capName, capImpl);
-    }
-
-    // Copy existing tool schemas to new instance (NEW in v1.0.6)
-    for (const [capName, schema] of this._tools.entries()) {
-      evolved._tools.set(capName, schema);
-    }
+    // Learn from self (copy existing capabilities and schemas)
+    const currentContract = this.teach();
+    evolved.learn([currentContract]);
 
     // Add additional capabilities if provided
     if (additionalCapabilities) {
-      for (const [capName, capImpl] of Object.entries(additionalCapabilities)) {
-        evolved._addCapability(capName, capImpl);
+      // Create temporary capabilities consciousness for new capabilities
+      const additionalCaps = Capabilities.create(name, additionalCapabilities);
+      
+      // Create minimal schema for additional capabilities (they must have schemas)
+      const additionalSchemas: Record<string, ToolSchema> = {};
+      for (const capName of Object.keys(additionalCapabilities)) {
+        additionalSchemas[capName] = {
+          name: capName,
+          description: `Capability ${capName} added during evolution`,
+          parameters: {
+            type: 'object',
+            properties: {},
+            required: []
+          }
+        };
       }
+      const additionalSchemaUnit = Schema.create(name, additionalSchemas);
+      
+      // Create validator for additional capabilities
+      const additionalValidator = Validator.create({
+        unitId: name,
+        capabilities: additionalCaps,
+        schema: additionalSchemaUnit
+      });
+
+      // Create teaching contract for additional capabilities
+      const additionalContract: TeachingContract = {
+        unitId: name,
+        capabilities: additionalCaps,
+        schema: additionalSchemaUnit,
+        validator: additionalValidator
+      };
+
+      // Learn additional capabilities
+      evolved.learn([additionalContract]);
     }
 
     return evolved;
   }
-
-
-  /**
-   * Protected method to add capabilities
-   */
-  protected _addCapability(
-    name: string,
-    implementation: (...args: unknown[]) => unknown,
-  ): void {
-    this._capabilities.set(name, implementation);
-  }
-
-  /**
-   * Protected method to get all current capabilities
-   */
-  protected _getAllCapabilities(): string[] {
-    return Array.from(this._capabilities.keys());
-  }
-
-  /**
-   * Get all schema names (NEW in v1.0.6)
-   * Returns array of schema names available for this unit
-   */
-  schemas(): string[] {
-    return Array.from(this._tools.keys());
-  }
-
-  /**
-   * Check if schema exists (NEW in v1.0.6)
-   */
-  hasSchema(tool: string): boolean {
-    return this._tools.has(tool);
-  }
-
-  /**
-   * Get specific tool schema (NEW in v1.0.6)
-   */
-  getSchema(tool: string): ToolSchema | undefined {
-    return this._tools.get(tool);
-  }
+  
 
   /**
    * Protected method to generate next version for evolution
@@ -343,6 +323,8 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
     return `${current}.1`;
   }
 }
+
+
 
 /**
  * Utility function to validate unit ID

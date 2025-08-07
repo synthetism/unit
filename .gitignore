@@ -4,6 +4,6 @@ logs
 node_modules/
 temp
 private
-demo
+/demo
 units
 tmp
