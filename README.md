@@ -60,9 +60,17 @@ class MessyClass {
 - **Dependency entanglement** - everything depends on everything 
 - **Abstraction cathedrals** - managers, agents, services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic
 - **Black Magic** - rabbit hole of hidden interactions
-- **Reverse Dependencies** - are still dependencies 
+- **Reverse Dependencies** - clean dependency-hell
 - **Typescript Strikes Back** - Types ownership dilemmas, ducktyping, generic<T> theater, type-casting enigmas
+- **Framework Infinite loop** - Endlessly abstracting the abstractions.
+- **Mock Everything Disease** - when your tests mock more code than they test
+- **Interface Madness** - 47 interfaces to pass a string between functions
+- **Factory Factory Factories** - Factories that build factories.
+- **Observer Pattern PTSD** - events firing events firing events into the void
+- **Decorator Diabetes** - @Injectable @Component @Service @Repository @Entity on everything
+- **Commits laundry-list** - 100 file-commit just to add one extra output to api.
 
+This is Madness!
 
 ## The Real Magic
 
