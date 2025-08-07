@@ -37,6 +37,12 @@ export class Capabilities {
    * Add a single capability (throws if exists)
    */
   add(name: string, fn: (...args: unknown[]) => unknown): void {
+    if (!name || name.trim() === '') {
+      throw new Error(`[${this.unitId}] Capability name cannot be empty`);
+    }
+    if (typeof fn !== 'function') {
+      throw new Error(`[${this.unitId}] Capability '${name}' must be a function`);
+    }
     if (this.map.has(name)) {
       throw new Error(`[${this.unitId}] Capability '${name}' already exists`);
     }
@@ -47,6 +53,12 @@ export class Capabilities {
    * Set a capability (overwrites if exists)
    */
   set(name: string, fn: (...args: unknown[]) => unknown): void {
+    if (!name || name.trim() === '') {
+      throw new Error(`[${this.unitId}] Capability name cannot be empty`);
+    }
+    if (typeof fn !== 'function') {
+      throw new Error(`[${this.unitId}] Capability '${name}' must be a function`);
+    }
     this.map.set(name, fn);
   }
 

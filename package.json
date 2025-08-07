@@ -1,6 +1,6 @@
 {
   "name": "@synet/unit",
-  "version": "1.0.7-dev.2",
+  "version": "1.0.7-dev.5",
   "description": "Unit of Unit Architecture",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -19,6 +19,7 @@
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
     "coverage": "vitest run --coverage",
+    "demo": "tsx demo/test-basic.ts",
     "lint": "biome lint ./src",
     "format": "biome format --write './src'",
     "prepublishOnly": "npm run lint && npm run build",

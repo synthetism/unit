@@ -15,6 +15,7 @@ export {
   type TeachingContract,
   type UnitProps,
   type ToolSchema,
+  type UnitCore,
   // Base classes
   ValueObject,
   Unit,
@@ -23,3 +24,14 @@ export {
   validateUnitSchema,
 } from "./unit";
 
+export {
+  Capabilities,
+} from "./capabilities";
+
+export {
+  Schema,
+} from "./schema";
+
+export {
+  Validator,
+} from "./validator";

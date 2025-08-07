@@ -71,6 +71,9 @@ export class Schema {
    * Validate schema structure
    */
   private validateSchema(name: string, schema: ToolSchema): void {
+    if (!name || name.trim() === '') {
+      throw new Error(`[${this.unitId}] Schema name cannot be empty`);
+    }
     if (!schema.name) {
       throw new Error(`[${this.unitId}] Schema '${name}' missing required 'name' field`);
     }
@@ -86,9 +89,20 @@ export class Schema {
   }
 
   /**
-   * Add schema with namespace support
+   * Add a single schema
    */
-  add(namespace: string, schemas: Record<string, ToolSchema>): void {
+  add(name: string, schema: ToolSchema): void {
+    if (this.schemas.has(name)) {
+      throw new Error(`[${this.unitId}] Schema '${name}' already exists`);
+    }
+    this.validateSchema(name, schema);
+    this.schemas.set(name, schema);
+  }
+
+  /**
+   * Add multiple schemas with namespace support
+   */
+  addNamespaced(namespace: string, schemas: Record<string, ToolSchema>): void {
     for (const [name, schema] of Object.entries(schemas)) {
       const namespacedName = `${namespace}.${name}`;
       this.schemas.set(namespacedName, {
@@ -96,6 +110,14 @@ export class Schema {
         name: namespacedName // Update name to namespaced version
       });
     }
+  }
+
+  /**
+   * Set a single schema (allows overwrite)
+   */
+  set(name: string, schema: ToolSchema): void {
+    this.validateSchema(name, schema);
+    this.schemas.set(name, schema);
   }
 
   /**
@@ -200,5 +222,52 @@ export class Schema {
    */
   size(): number {
     return this.schemas.size;
+  }
+
+  /**
+   * Validate parameters against a schema
+   */
+  validate(schemaName: string, parameters: Record<string, unknown>): { valid: boolean; errors: string[] } {
+    const schema = this.schemas.get(schemaName);
+    if (!schema) {
+      return { valid: false, errors: [`Schema '${schemaName}' not found`] };
+    }
+
+    const errors: string[] = [];
+    const { properties = {}, required = [] } = schema.parameters;
+
+    // Check required parameters
+    for (const requiredParam of required) {
+      if (!(requiredParam in parameters)) {
+        errors.push(`Missing required parameter: ${requiredParam}`);
+      }
+    }
+
+    // Check parameter types
+    for (const [paramName, paramValue] of Object.entries(parameters)) {
+      const paramSchema = properties[paramName];
+      if (!paramSchema) {
+        continue; // Allow additional parameters
+      }
+
+      const expectedType = paramSchema.type;
+      const actualType = typeof paramValue;
+
+      // Type checking
+      if (expectedType === 'array' && !Array.isArray(paramValue)) {
+        errors.push(`Parameter '${paramName}' should be array, got ${actualType}`);
+      } else if (expectedType === 'object' && (actualType !== 'object' || Array.isArray(paramValue) || paramValue === null)) {
+        errors.push(`Parameter '${paramName}' should be object, got ${actualType}`);
+      } else if (expectedType !== 'array' && expectedType !== 'object' && actualType !== expectedType) {
+        errors.push(`Parameter '${paramName}' should be ${expectedType}, got ${actualType}`);
+      }
+
+      // Enum checking
+      if (paramSchema.enum && !paramSchema.enum.includes(paramValue as string)) {
+        errors.push(`Parameter '${paramName}' should be one of: ${paramSchema.enum.join(', ')}`);
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
   }
 }

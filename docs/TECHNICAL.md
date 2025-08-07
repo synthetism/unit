@@ -296,7 +296,6 @@ class WorkflowUnit extends Unit<WorkflowProps> {
     return { capabilities, schema, validator };
   }
 }
-```
 
 ### Multi-Generation Evolution Chains
 
@@ -577,7 +576,6 @@ class ManagedUnit extends Unit<ManagedProps> {
     this._cleanup = [];
   }
 }
-```
 
 ## Testing Patterns
 

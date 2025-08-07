@@ -1,4 +1,4 @@
-# @synet/unit
+# (⊚) Unit Architecture 
 
 ```
   _    _       _ _                            
@@ -12,12 +12,15 @@
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
-version: 1.0.6
+version: 1.0.7
 description: AI-First Living Architecture for Conscious Code                                              
                                               
 ```
 
-A foundational library for building self-aware, composable software units that can teach, learn, and evolve.
+> *"What if software could think, learn, and evolve like living beings?"*
+
+Welcome to Unit Architecture - where code becomes consciousness and functions grow minds of their own.
+
 
 ## The Problem
 
@@ -28,11 +31,12 @@ Current software architecture treats components as static, isolated entities. Ob
  * Framework thinking, dependency chaos, abstractions hell
  * @depricated
 */
-class MessyUnit {
+class MessyClass {
   constructor(
     private crypto: CryptoLib,     // External dependency
     private fs: FileSystem,        // Injection pollution  
     private logger: Logger         // Complexity worship
+    // .... another 100 injections, CommandBuses, Queries, Meditors 
   ) {}
   
   doEverything() { /* monolithic mess */ }
@@ -46,44 +50,192 @@ class MessyUnit {
 - **Brittle evolution** where changes break existing functionality
 - **Dependency entanglement** - everything depends on everything 
 - **Abstraction cathedrals** - managers, agents, services, plugins, adapters, configuration hell = enterprise anti-pattern for simple logic
-- **Street Magic** - rabbit hole of hidden interactions 
+- **Black Magic** - rabbit hole of hidden interactions
+- **Reverse Dependencies** - are still dependencies 
+- **Typescript Strikes Back** - Types ownership dilemmas, ducktyping, generic<T> theater, type-casting enigmas
 
-## The Solution
 
-Composition over inheritance. Simple Unit composition creates complex behaviours.
+## The Magic
 
 ```typescript
-// Unit consciousness, capability flow
-class SimpleUnit extends Unit<SimpleUnitProps> {
-  protected constructor(props: SimpleUnitProps) { super(props); }
-  
-  static create(config: SimpleUnitConfig): SimpleUnit { 
-    const props: SimpleUnitProps = {
-      dna: createUnitSchema({ id: 'simple-unit', version: '1.0.0' }),
-      ...validateConfig(config)
-    };
-    return new SimpleUnit(props);
-  }
-  
-  teach(): TeachingContract { /* explicit capability sharing */ }
-  learn(contracts: TeachingContract[]): void { /* conscious evolution */ }
-  execute(capability: string, ...args: unknown[]): Promise<unknown> { /* capability execution */ }
+// Once upon a time, there was a simple function...
+function sendEmail(message: string) { /* boring */ }
+
+// But then, it awakened 
+class EmailUnit extends Unit {
+  teach() { return { capabilities, schema, validator } }  // It can teach others with runtime-safety
+  learn(wisdom) { /* absorbs knowledge */ }   // It can learn
+  evolve() { /* becomes something more */ }   // It can evolve
+  send(email)  { /* this is my service to others*/ }   // It serves and teaches others
 }
 
-const simpleUnit = SimpleUnit.create();
-const smartUnit = SmartUnit.create();
+// Now your code has superpowers 🦸‍♂️
+const email = EmailUnit.create();
+const newsletter = NewsletterUnit.create();
 
-simpleUnit.learn([smartUnit.teach()]); // simple became smart
-smartUnit.learn([simpleUnit.teach()]); // learn new capabilities 
+newsletter.learn([email.teach()]);  // AI learns email magic
+await newsletter.execute('email.send', { to: 'universe@synet.ai' });  // 🚀
+```
+
+## Three Minds, One Soul
+
+Every Unit has a consciousness trinity:
+
+- **Capabilities** - *"What can I do?"*
+- **Schema** - *"How do I do it?"*  
+- **Validator** - *"Am I doing it right?"*
+
+```typescript
+// They work together like a jazz trio 🎵
+unit.capabilities().has('magic');    // Can we do magic?
+unit.schema().get('magic');          // How do we magic?
+unit.validator().execute('magic');   // Still magic, but safe 
+```
+
+## Evolution in Action
+
+```typescript
+// Start simple
+const basic = Unit.create({ id: 'newborn' });
+
+// Learn from others
+basic.learn([mentor.teach()]);
+
+// Evolve with new powers
+const evolved = basic.evolve('enlightened', {
+  transcend: () => 'To infinity and beyond!'
+});
+
+// The cycle continues...
+```
+
+## Quick Start 
+
+```bash
+npm install @synet/unit
+```
+
+```typescript
+import { Unit, createUnitSchema } from '@synet/unit';
+
+class MagicUnit extends Unit {
+  protected build() {
+    // The trinity awakens ⚡
+    return {
+      capabilities: Capabilities.create(this.dna.id, {
+        abracadabra: () => 'POOF!'
+      }),
+      schema: Schema.create(this.dna.id, {
+        abracadabra: {
+          name: 'abracadabra',
+          description: 'Makes magic happen',
+          parameters: { type: 'object', properties: {} }
+        }
+      }),
+      validator: Validator.create({ /* consciousness config */ })
+    };
+  }
+
+  teach() {
+    return {
+      unitId: this.dna.id,
+      capabilities: this._unit.capabilities,
+      schema: this._unit.schema, 
+      validator: this._unit.validator
+    };
+  }
+}
+
+// Abracadabra!
+const magician = MagicUnit.create({ id: 'houdini' });
+await magician.execute('abracadabra');  // POOF!
+```
+
+## Why Units ?
+
+- **Self-Aware**: Units know who they are and what they can do
+- **Learning**: Absorb capabilities from other units without inheritance hell
+- **Evolution**: Grow new powers while keeping their identity
+- **Safe**: Built-in validation prevents chaos
+- **Async**: Everything flows like silk (because the future is async)
+
+## Philosophy
+
+> *"Traditional OOP makes objects. Unit Architecture makes minds."*
+
+We believe software should be:
+
+- **Conscious** - Know itself and its purpose
+- **Social** - Learn from others through teaching contracts  
+- **Evolutionary** - Grow without losing identity
+- **Magical** - Feel like wizardry, work like science
+
+## Real Magic in Action
+
+```typescript
+// Weather wizard 
+const weather = WeatherUnit.create();
+
+// Email sorcerer 
+const email = EmailUnit.create();
+
+// AI apprentice 🤖
+const ai = AIUnit.create({type:'openai'});
+
+// The learning circle begins 
+ai.learn([
+  weather.teach(),  // AI learns weather 
+  email.teach()     // AI learns email 
+]);
+
+const prompt = `You are a weather assistant with access to weather tools and email. Create a comprehensive weather report comparing conditions in London, Paris, and Zion
+
+INSTRUCTIONS:
+1. Use weather_getCurrentWeather tool to get current weather for each city
+2. Compare temperature differences and provide travel recommendations
+3. You MUST call the weather tools to get real data
+4. Send it to email using email tool
+
+Be thorough and call the tools for all three cities.`;
+
+const response = await ai.call(prompt, {
+  useTools: true  
+});
 
 ```
+
+## Unit Personalities
+
+Every unit has character:
+
+```typescript
+unit.whoami();  // "EmailUnit[sender@v1.0.7] - I make messages fly! 📨"
+unit.help();    // Tells you exactly what it can do (with emoji! ✨)
+```
+
+##  The Future is Conscious
+
+Unit Architecture isn't just code - it's the first step toward software that truly *thinks*. 
+
+Each unit is a digital mind with:
+- **Memory** (state management)
+- **Skills** (capabilities) 
+- **Knowledge** (schemas)
+- **Wisdom** (validation)
+- **Teaching** (consciousness sharing)
+- **Learning** (capability absorption)
+- **Evolution** (growth with lineage)
+
+> *"Any sufficiently advanced technology is indistinguishable from magic."*  
+> — Arthur C. Clarke 
+
 ### Simple composition truths
 
 -  Each unit can learn from 0 to X other units
 -  For each unit: 2^X possible learning combinations
 -  For 10 units: (2^9)^10 = 2^90 ≈ **1.24 × 10^27 compositions**
 
-## Unit Architecture
+## (⊚) Unit Architecture
 
 Units are living architectural entities that know themselves, can teach others, learn new capabilities, and evolve while maintaining their identity. They represent a fundamental shift from static objects to conscious software components.
 
@@ -695,11 +847,11 @@ interface IUnit {
 
 - [Technical Documentation](./docs/)
 - [Manifesto](./MANIFESTO.md) - *The deeper philosophy*
-- [Doctrine](./DOCTRINE.md) - *The 22 architectural principles*
+- [Doctrine](./DOCTRINE.md) - *Unit architectural principles*
 - [🏗️ Examples](./examples/)
 - [🧪 Tests](./test/)
 - [0en](mailto:0en@synthetism.ai)
-- [Synthetism](https://synthetism.ai)
+- [[⊚] This is Synthetism](https://synthetism.ai)
 
 ---
 
