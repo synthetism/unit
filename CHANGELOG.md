@@ -1,12 +1,26 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+## [1.0.7] - 2024-08-07
 
-Most patterns are highly stable, no changes will be made to existing methods, only extended, but I will adhere to adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) just in case. You can safely upgrade, but as always, RTFM (read changelog for major releases).
+### Added
+- **Consciousness Trinity Pattern**: All units now implement `build()` method creating three living instances:
+  - `Capabilities` - Runtime function bindings and execution
+  - `Schema` - JSON schema definitions for AI integration  
+  - `Validator` - Parameter validation and capability verification
 
-# [1.0.6] - 28-07-25
+### Changed
+- **Enhanced Teaching Contracts**: Now expose living consciousness instances instead of static bindings
+- **Method Signatures**: Units access trinity through `capabilities()`, `schema()`, `validator()` methods
+- **Validation Layer**: Improved parameter checking and capability verification
 
-## AI-First Unit Architecture 🤖
+### Migration
+- See `./docs/UNIT-1.0.7-MIGRATION.md` for complete upgrade guide
+- All units must implement `build()` method returning consciousness trinity
+- Teaching contracts now expose living instances, not static objects
+
+## [1.0.6] - 28-07-25
+
+### AI-First Unit Architecture 🤖
 
 ### New Features
 

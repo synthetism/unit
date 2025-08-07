@@ -1,7 +1,7 @@
 # (⊚) Unit Architecture 
 
 ```
-  _    _       _ _                            
+   _    _       _ _                            
  | |  | |     (_) |                           
  | |  | |_ __  _| |_                          
  | |  | | '_ \| | __|                         
@@ -12,6 +12,7 @@
     / ____ \| | | (__| | | | | ||  __/ (__| |_| |_| | | |  __/
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
+
 version: 1.0.7
 description: AI-First Living Architecture for Conscious Code                                              
                                               
@@ -21,6 +22,14 @@ description: AI-First Living Architecture for Conscious Code
 
 Welcome to Unit Architecture - where code becomes consciousness and functions grow minds of their own.
 
+## Unit Architecture features:
+
+- **State Management**: Immutable props via ValueObject pattern
+- **Capability System**: Dynamic function binding and execution  
+- **Schema Definition**: JSON schemas for parameter validation
+- **Runtime Validation**: Type checking and capability verification
+- **Learning Protocol**: Structured capability transfer between units
+- **Evolution Tracking**: Complete lineage preservation across versions
 
 ## The Problem
 
@@ -36,7 +45,7 @@ class MessyClass {
     private crypto: CryptoLib,     // External dependency
     private fs: FileSystem,        // Injection pollution  
     private logger: Logger         // Complexity worship
-    // .... another 100 injections, CommandBuses, Queries, Meditors 
+    // ...another 100+ injections, CommandBuses, Queries, Meditors
   ) {}
   
   doEverything() { /* monolithic mess */ }
@@ -74,39 +83,43 @@ const email = EmailUnit.create();
 const newsletter = NewsletterUnit.create();
 
 newsletter.learn([email.teach()]);  // AI learns email magic
-await newsletter.execute('email.send', { to: 'universe@synet.ai' });  // 🚀
+await newsletter.execute('email.send', { to: 'ai@synet.network' });  // 🚀
 ```
 
-## Three Minds, One Soul
+## Unit Core
 
-Every Unit has a consciousness trinity:
+Every Unit implements three living components:
 
-- **Capabilities** - *"What can I do?"*
-- **Schema** - *"How do I do it?"*  
-- **Validator** - *"Am I doing it right?"*
+- **Capabilities** - Function bindings with runtime execution
+- **Schema** - JSON schemas for AI tool integration  
+- **Validator** - Parameter validation and capability checking
 
 ```typescript
-// They work together like a jazz trio 🎵
-unit.capabilities().has('magic');    // Can we do magic?
-unit.schema().get('magic');          // How do we magic?
-unit.validator().execute('magic');   // Still magic, but safe 
+// Runtime capability checking
+unit.capabilities().has('sendEmail');    // true/false
+unit.schema().get('sendEmail');          // JSON schema object
+unit.validator().execute('sendEmail', params);   // Validated execution
 ```
 
-## Evolution in Action
+## Dynamic Learning
 
 ```typescript
-// Start simple
-const basic = Unit.create({ id: 'newborn' });
+// Units acquire capabilities at runtime
+const crypto = CryptoUnit.create();
+const storage = StorageUnit.create(); 
+const api = APIUnit.create();
 
-// Learn from others
-basic.learn([mentor.teach()]);
+// Learn multiple capabilities
+api.learn([crypto.teach(), storage.teach()]);
 
-// Evolve with new powers
-const evolved = basic.evolve('enlightened', {
-  transcend: () => 'To infinity and beyond!'
+// Now API unit can encrypt and store
+await api.execute('crypto.encrypt', data);
+await api.execute('storage.save', encryptedData);
+
+// Evolution preserves lineage
+const enhanced = api.evolve('secure-api-v2', {
+  audit: (action) => console.log(`[AUDIT] ${action}`)
 });
-
-// The cycle continues...
 ```
 
 ## Quick Start 
@@ -118,21 +131,27 @@ npm install @synet/unit
 ```typescript
 import { Unit, createUnitSchema } from '@synet/unit';
 
-class MagicUnit extends Unit {
+class DatabaseUnit extends Unit {
   protected build() {
-    // The trinity awakens ⚡
     return {
       capabilities: Capabilities.create(this.dna.id, {
-        abracadabra: () => 'POOF!'
+        save: (data) => this.saveToDb(data),
+        find: (id) => this.findById(id)
       }),
       schema: Schema.create(this.dna.id, {
-        abracadabra: {
-          name: 'abracadabra',
-          description: 'Makes magic happen',
-          parameters: { type: 'object', properties: {} }
+        save: {
+          name: 'save',
+          description: 'Save data to database',
+          parameters: {
+            type: 'object',
+            properties: {
+              data: { type: 'object', description: 'Data to save' }
+            },
+            required: ['data']
+          }
         }
       }),
-      validator: Validator.create({ /* consciousness config */ })
+      validator: Validator.create({ unitId: this.dna.id })
     };
   }
 
@@ -144,78 +163,74 @@ class MagicUnit extends Unit {
       validator: this._unit.validator
     };
   }
+
+  private saveToDb(data: unknown) { /* implementation */ }
+  private findById(id: string) { /* implementation */ }
 }
 
-// Abracadabra!
-const magician = MagicUnit.create({ id: 'houdini' });
-await magician.execute('abracadabra');  // POOF!
-```
-
-## Why Units ?
-
-- **Self-Aware**: Units know who they are and what they can do
-- **Learning**: Absorb capabilities from other units without inheritance hell
-- **Evolution**: Grow new powers while keeping their identity
-- **Safe**: Built-in validation prevents chaos
-- **Async**: Everything flows like silk (because the future is async)
-
-## Philosophy
-
-> *"Traditional OOP makes objects. Unit Architecture makes minds."*
-
-We believe software should be:
-
-- **Conscious** - Know itself and its purpose
-- **Social** - Learn from others through teaching contracts  
-- **Evolutionary** - Grow without losing identity
-- **Magical** - Feel like wizardry, work like science
-
-## Real Magic in Action
-
-```typescript
-// Weather wizard 
-const weather = WeatherUnit.create();
-
-// Email sorcerer 
-const email = EmailUnit.create();
-
-// AI apprentice 🤖
-const ai = AIUnit.create({type:'openai'});
-
-// The learning circle begins 
-ai.learn([
-  weather.teach(),  // AI learns weather 
-  email.teach()     // AI learns email 
-]);
-
-const prompt = `You are a weather assistant with access to weather tools and email. Create a comprehensive weather report comparing conditions in London, Paris, and Zion
-
-INSTRUCTIONS:
-1. Use weather_getCurrentWeather tool to get current weather for each city
-2. Compare temperature differences and provide travel recommendations
-3. You MUST call the weather tools to get real data
-4. Send it to email using email tool
-
-Be thorough and call the tools for all three cities.`;
-
-const response = await ai.call(prompt, {
-  useTools: true  
-});
+// Use it
+const db = DatabaseUnit.create({ id: 'main-db' });
+await db.execute('save', { user: 'john', email: 'john@example.com' });
 
 ```
 
-## Unit Personalities
+## Core Benefits
 
-Every unit has character:
+- **Runtime Capability Discovery**: `unit.capabilities()` returns current abilities
+- **Dynamic Composition**: Units learn from each other without inheritance  
+- **Immutable Evolution**: `unit.evolve()` creates new versions with dna history
+- **Built-in Validation**: Schema validation prevents runtime errors
+- **AI Integration**: JSON schemas enable seamless AI tool calling
+
+## Design Principles
+
+Units implement capability-based architecture:
+
+- **Capability Discovery**: Units expose their functions through `teach()`
+- **Runtime Learning**: Units acquire new functions through `learn()`  
+- **Evolutionary Growth**: Units create enhanced versions via `evolve()`
+- **Validation First**: All operations validate parameters before execution
+
+## Practical Example
 
 ```typescript
-unit.whoami();  // "EmailUnit[sender@v1.0.7] - I make messages fly! 📨"
-unit.help();    // Tells you exactly what it can do (with emoji! ✨)
+// Three independent units
+const weather = WeatherUnit.create({ apiKey: 'wx_key' });
+const email = EmailUnit.create({ smtp: { host: 'smtp.gmail.com' } });
+const ai = AIUnit.create({ provider: 'openai', apiKey: 'sk-...' });
+
+// AI learns weather and email capabilities
+ai.learn([weather.teach(), email.teach()]);
+
+// AI can now call weather APIs and send emails
+const prompt = `Get weather for Tokyo and email the report to admin@company.com`;
+
+// AI automatically uses learned capabilities
+const response = await ai.call(prompt, { useTools: true });
+
+// Behind the scenes:
+// 1. AI calls weather.getCurrentWeather('Tokyo')
+// 2. AI calls email.send({ to: 'admin@company.com', subject: 'Weather Report', body: '...' })
+// 3. Returns confirmation message
+
+```
+
+## Runtime Introspection
+
+Units provide complete self-inspection:
+
+```typescript
+unit.whoami();        // "DatabaseUnit[main-db@v1.0.7] - Data persistence"
+unit.capabilities();  // ['save', 'find', 'crypto.encrypt', 'email.send']  
+unit.schema();  // JSON schema, compatible with AI tool calling
+unit.help();          // Detailed usage instructions with examples
+unit.dna.version;     // "1.0.7"
+unit.dna.parent?.id;  // "basic-db" (if evolved)
 ```
 
 ##  The Future is Conscious
 
-Unit Architecture isn't just code - it's the first step toward software that truly *thinks*. 
+Unit Architecture is the first step toward software that truly *thinks*. 
 
 Each unit is a digital mind with:
 - **Memory** (state management)
@@ -351,7 +366,9 @@ interface TeachingContract {
 
 interface IUnit {
   readonly dna: UnitSchema;
-  capabilities(): string[]; // What can I do?
+  capabilities(): Capabilities; // What can I do?
+  schema(): Schema; // My schema
+  validator(): Validator // Access my validation tools 
   teach(): TeachingContract; // Here's how to do it
   learn(contracts: TeachingContract[]): void; // I'll learn this
   evolve(name: string, additionalCaps?: Record<string, Function>): Unit<T>;
@@ -420,7 +437,7 @@ class CalculatorUnit extends Unit<CalculatorProps> {
   }
   
   whoami(): string {
-    return `[🧮] Calculator Unit - Mathematical operations (${this.dna.id})`;
+    return `Calculator Unit - Mathematical operations (${this.dna.id})`;
   }
   
   capabilities(): string[] {
@@ -466,7 +483,7 @@ class CalculatorUnit extends Unit<CalculatorProps> {
   
   help(): void {
     console.log(`
-🧮 Calculator Unit - Mathematical Operations
+Calculator Unit - Mathematical Operations
 
 NATIVE CAPABILITIES:
 • add(a, b) - Addition operation
@@ -496,7 +513,7 @@ USAGE:
 // Usage
 const calc = CalculatorUnit.create({ precision: 4 });
 
-console.log(calc.whoami());              // [🧮] Calculator Unit - Mathematical operations (calculator-unit)
+console.log(calc.whoami());              // Calculator Unit - Mathematical operations (calculator-unit)
 console.log(calc.capabilities());        // ['add', 'multiply']
 await calc.execute('add', 5, 3);        // 8
 
@@ -664,19 +681,28 @@ Teaching contracts now support optional tool schemas for rich AI integration:
 ```typescript
 interface TeachingContract {
   unitId: string;
-  capabilities: Record<string, (...args: unknown[]) => unknown>;
-  tools?: Record<string, ToolSchema>;  // NEW: Optional AI tool schemas
+  capabilities: Capabilities;
+  schema: Schema;
+  validator: Validator;
 }
 
 // Example with schemas
 weather.teach() // Returns:
 {
   unitId: 'weather',
-  capabilities: {
+  capabilities:    
+    get()
+    set()
+    has()
+    list() => {
     getCurrentWeather: (location: string) => Promise<WeatherData>,
     getForecast: (location: string, days: number) => Promise<ForecastData>
-  },
-  tools: {
+    },
+  schema: 
+    get()
+    set()
+    has()
+    list() => {
     getCurrentWeather: {
       name: 'getCurrentWeather',
       description: 'Get current weather conditions for a location',
@@ -689,6 +715,12 @@ weather.teach() // Returns:
         required: ['location']
       }
     }
+    validator: 
+    execute() // Runtime-Safe capability  execution
+    validateInput()
+    validateOutput()
+    isValid()
+    help()
   }
 }
 ```
@@ -699,7 +731,7 @@ Units provide methods to access learned tool schemas:
 
 ```typescript
 // Check available schemas
-unit.schemas();                     // ['weather.getCurrentWeather', 'weather.getForecast']
+unit.schema().list();                     // ['weather.getCurrentWeather', 'weather.getForecast']
 
 // Check if specific schema exists  
 unit.hasSchema('weather.getCurrentWeather');  // true
@@ -732,21 +764,6 @@ const response = await ai.call('What is the weather in Tokyo today?', {
 // Response includes weather data retrieved via tool calls:
 // "The current weather in Tokyo is 25°C with clear skies..."
 ```
-
-### Backward Compatibility
-
-Units without tool schemas continue to work normally:
-
-```typescript
-// Traditional unit-to-unit learning (no schemas needed)
-cryptoUnit.learn([signerUnit.teach()]);
-await cryptoUnit.execute('signer.sign', data);  // Works perfectly
-
-// AI integration without schemas (basic capability learning)
-ai.learn([legacyUnit.teach()]);  // Still works, just no rich tool calling
-```
-
-The tool schema system is completely optional - units can provide rich AI integration when needed while maintaining full compatibility with existing Unit Architecture patterns.
 
 
 ## The Vision
@@ -787,6 +804,13 @@ vault.learn(credential.teach())
 // Vault can issue VC and sign, all without knowing private key.  
 await vault.execute('credential.issueVC',claims);
 
+// Use all as AI tools. 
+
+ai.learn([crypto.teach(),signer.teach(),vault.teach(),email.teach()]);
+ai.call('Create document, sign data, encrypt it, save to vault and email on completion',{
+      useTools: true  
+     }
+);
 
 ```
 
@@ -801,7 +825,7 @@ await vault.execute('credential.issueVC',claims);
 ### Core Interfaces
 
 ```typescript
-// NEW in v1.0.6: Tool Schema for AI integration
+
 interface ToolSchema {
   name: string;
   description: string;
@@ -819,28 +843,33 @@ interface ToolSchema {
 // Enhanced Teaching Contract
 interface TeachingContract {
   unitId: string;
-  capabilities: Record<string, (...args: unknown[]) => unknown>;
-  tools?: Record<string, ToolSchema>;  // Optional AI tool schemas
+  capabilities: Capabilities;
+  schema: Schema;
+  validator: Validator;
 }
 
 // Core Unit Interface
 interface IUnit {
-  whoami(): string;
+
+  // Capabilities and validation
   can(command: string): boolean;
-  capabilities(): string[];
-  help(): void;
+  capabilities(): Capabilities;
+  schema(): Schema;
+  validator(): Validator();
+
+  // Execution and knowledge
   execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
   teach(): TeachingContract;
   learn(contracts: TeachingContract[]): void;
   evolve(name: string, additionalCapabilities?: Record<string, Function>): IUnit;
   
-  // NEW in v1.0.6: Schema access methods
-  schemas(): string[];
-  hasSchema(tool: string): boolean;
-  getSchema(tool: string): ToolSchema | undefined;
+  // Customer support
+
+  whoami(): string;
+  help(): void;
+
 }
 ```
-
 ---
 
 ### Links
