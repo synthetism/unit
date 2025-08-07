@@ -64,7 +64,7 @@ class MessyClass {
 - **Typescript Strikes Back** - Types ownership dilemmas, ducktyping, generic<T> theater, type-casting enigmas
 
 
-## The Magic
+## The Real Magic
 
 ```typescript
 // Once upon a time, there was a simple function...
@@ -82,8 +82,8 @@ class EmailUnit extends Unit {
 const email = EmailUnit.create();
 const newsletter = NewsletterUnit.create();
 
-newsletter.learn([email.teach()]);  // AI learns email magic
-await newsletter.execute('email.send', { to: 'ai@synet.network' });  // 🚀
+newsletter.learn([email.teach()]);  // Newsletter learns how to email 
+await newsletter.execute('email.send', { to: 'ai@synet.network' });  
 ```
 
 ## Unit Core
@@ -133,26 +133,33 @@ import { Unit, createUnitSchema } from '@synet/unit';
 
 class DatabaseUnit extends Unit {
   protected build() {
-    return {
-      capabilities: Capabilities.create(this.dna.id, {
-        save: (data) => this.saveToDb(data),
-        find: (id) => this.findById(id)
-      }),
-      schema: Schema.create(this.dna.id, {
-        save: {
-          name: 'save',
-          description: 'Save data to database',
-          parameters: {
-            type: 'object',
-            properties: {
-              data: { type: 'object', description: 'Data to save' }
-            },
-            required: ['data']
-          }
+    const capabilities = Capabilities.create(this.props.dna.id, {
+      save: (data) => this.saveToDb(data),
+      find: (id) => this.findById(id)
+    });
+
+    const schema = Schema.create(this.props.dna.id, {
+      save: {
+        name: 'save',
+        description: 'Save data to database',
+        parameters: {
+          type: 'object',
+          properties: {
+            data: { type: 'object', description: 'Data to save' }
+          },
+          required: ['data']
         }
-      }),
-      validator: Validator.create({ unitId: this.dna.id })
-    };
+      }
+    });
+
+    const validator = Validator.create({
+      unitId: this.props.dna.id,
+      capabilities,
+      schema,
+      strictMode: false
+    });
+
+    return { capabilities, schema, validator };
   }
 
   teach() {
@@ -361,7 +368,9 @@ Units know what they can do and can share that knowledge:
 ```typescript
 interface TeachingContract {
   unitId: string;
-  capabilities: Record<string, (...args: unknown[]) => unknown>;
+  capabilities: Capabilities;
+  schema: Schema;
+  validator: Validator;
 }
 
 interface IUnit {
@@ -436,6 +445,49 @@ class CalculatorUnit extends Unit<CalculatorProps> {
     return new CalculatorUnit(props);
   }
   
+  protected build() {
+    const capabilities = Capabilities.create(this.props.dna.id, {
+      add: this.addImpl.bind(this),
+      multiply: this.multiplyImpl.bind(this)
+    });
+
+    const schema = Schema.create(this.props.dna.id, {
+      add: {
+        name: 'add',
+        description: 'Add two numbers with specified precision',
+        parameters: {
+          type: 'object',
+          properties: {
+            a: { type: 'number', description: 'First number' },
+            b: { type: 'number', description: 'Second number' }
+          },
+          required: ['a', 'b']
+        }
+      },
+      multiply: {
+        name: 'multiply',
+        description: 'Multiply two numbers with specified precision',
+        parameters: {
+          type: 'object',
+          properties: {
+            a: { type: 'number', description: 'First number' },
+            b: { type: 'number', description: 'Second number' }
+          },
+          required: ['a', 'b']
+        }
+      }
+    });
+
+    const validator = Validator.create({
+      unitId: this.props.dna.id,
+      capabilities,
+      schema,
+      strictMode: false
+    });
+
+    return { capabilities, schema, validator };
+  }
+  
   whoami(): string {
     return `Calculator Unit - Mathematical operations (${this.dna.id})`;
   }
@@ -447,37 +499,9 @@ class CalculatorUnit extends Unit<CalculatorProps> {
   teach(): TeachingContract {
     return {
       unitId: this.dna.id,
-      capabilities: {
-        add: this.addImpl.bind(this),
-        multiply: this.multiplyImpl.bind(this)
-      },
-      // NEW in v1.0.6: Tool schemas for AI provider integration
-      tools: {
-        add: {
-          name: 'add',
-          description: 'Add two numbers with specified precision',
-          parameters: {
-            type: 'object',
-            properties: {
-              a: { type: 'number', description: 'First number' },
-              b: { type: 'number', description: 'Second number' }
-            },
-            required: ['a', 'b']
-          }
-        },
-        multiply: {
-          name: 'multiply', 
-          description: 'Multiply two numbers with specified precision',
-          parameters: {
-            type: 'object',
-            properties: {
-              a: { type: 'number', description: 'First number' },
-              b: { type: 'number', description: 'Second number' }
-            },
-            required: ['a', 'b']
-          }
-        }
-      }
+      capabilities: this._unit.capabilities,
+      schema: this._unit.schema,
+      validator: this._unit.validator
     };
   }
   
@@ -635,7 +659,7 @@ Units can explain and validate themselves:
 ```typescript
 // Units are self-documenting
 unit.help();
-unit.explain();
+unit.whoami();
 
 ```
 
@@ -650,7 +674,7 @@ console.log(unit.dna.parent?.id);  // Evolution history
 ```
 
 
-## AI Tool Integration (NEW in v1.0.6)
+## AI Tool Integration
 
 Units can now provide structured tool schemas for AI agent integration, enabling sophisticated AI-driven capability learning and execution.
 
@@ -734,10 +758,10 @@ Units provide methods to access learned tool schemas:
 unit.schema().list();                     // ['weather.getCurrentWeather', 'weather.getForecast']
 
 // Check if specific schema exists  
-unit.hasSchema('weather.getCurrentWeather');  // true
+unit.schema().has('weather.getCurrentWeather');  // true
 
 // Get schema details
-const schema = unit.getSchema('weather.getCurrentWeather');
+const schema = unit.schema().get('weather.getCurrentWeather');
 console.log(schema.description);    // 'Get current weather conditions for a location'
 ```
 
@@ -855,7 +879,7 @@ interface IUnit {
   can(command: string): boolean;
   capabilities(): Capabilities;
   schema(): Schema;
-  validator(): Validator();
+  validator(): Validator;
 
   // Execution and knowledge
   execute<R = unknown>(commandName: string, ...args: unknown[]): Promise<R>;
