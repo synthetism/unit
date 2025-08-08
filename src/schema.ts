@@ -31,7 +31,7 @@ export interface ToolSchema {
   };
   /** Response structure (NEW in v1.0.7) */
   response?: {
-    type: 'object' | 'string' | 'number' | 'boolean' | 'array';
+    type: 'object' | 'string' | 'number' | 'boolean' | 'array' | 'void';
     properties?: Record<string, {
       type: string;
       description: string;

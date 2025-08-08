@@ -45,7 +45,7 @@ class MessyClass {
     private crypto: CryptoLib,     // External dependency
     private fs: FileSystem,        // Injection pollution  
     private logger: Logger         // Complexity worship
-    // ...another 100+ injections, CommandBuses, Queries, Meditors
+    // ...another 100+ injections, CommandBuses, Queries, Mediators
   ) {}
   
   doEverything() { /* monolithic mess */ }

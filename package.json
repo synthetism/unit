@@ -1,6 +1,6 @@
 {
   "name": "@synet/unit",
-  "version": "1.0.7-dev.5",
+  "version": "1.0.7",
   "description": "Unit of Unit Architecture",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
