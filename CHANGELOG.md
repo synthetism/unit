@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.8] - 2024-08-11
+
+### Added
+
+- added `description?: string;` to UnitSchema
+- extended `ToolSchema`, added   `items?: { type: string; description?: string };` and    `enum?: string[];` for better response structure
+
 ## [1.0.7] - 2024-08-07
 
 ### Added
