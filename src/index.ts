@@ -35,3 +35,9 @@ export {
 export {
   Validator,
 } from "./validator";
+
+export {
+  EventEmitter,
+  type IEventEmitter,
+    type Event,
+} from "./events";

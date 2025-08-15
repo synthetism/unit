@@ -1,5 +1,92 @@
 # Changelog
 
+
+## [1.0.8] - 2024-08-15
+
+### EVENT EMITTER
+
+Now every Unit can use built-in, in-memory, runtime agnostic EventEmitter with type-safety, extendable and `IEventEmitter` interface to inject it's own adapter.
+
+Now you can:
+
+```typescript
+
+ const unit = Unit.create(); 
+
+ unit.on('unit.event', (event) => {
+  if(event.error) {      
+    console.log(`${event.type} - ERROR`);
+      console.log(event.error?.message);
+  } else {
+   console.log(`${event.type} - SUCCESSFUL`);
+  }
+ })
+
+```
+
+**Works with all new Units@1.0.9, no config needed**
+
+
+#### Interface: 
+
+```typescript
+// Defailt event 
+export interface Event {
+  type: string;
+  timestamp: Date;
+  error?: EventError;
+}
+
+export interface EventError {
+  message: string; // Universal: error description
+  code?: string;   // Node.js: ENOENT, EACCES, etc. / Browser: could be HTTP codes
+  path?: string;  // File operations
+  syscall?: string;   // Node.js: 'open', 'write', etc.
+  errno?: number;     // Node.js: error number
+  stack?: string;     // Debug info (optional)
+}
+
+```
+
+### `IEventEmitter` custom adapter 
+
+Interface:
+```typescript
+export interface IEventEmitter<TEvent extends Event = Event> {
+  on<T extends TEvent>(type: string, handler: (event: T) => void): () => void;
+  once<T extends TEvent>(type: string, handler: (event: T) => void): () => void;
+  off(type: string): void;
+  emit(event: TEvent): void;
+  removeAllListeners(): void;
+  listenerCount(type: string): number;
+  eventTypes(): string[];
+}
+```
+
+Usage: 
+
+```typescript
+import { IEventEmitter, Event } from '@synet/unit'
+
+interface MyEventType extends Event  {
+    type: 'event.save' | 'event.load'
+    data: {
+       operation:string; 
+    }   
+}
+
+const myEventEmitter:IEventEmitter = new MyEventEmitter<MyEventType>();
+const unit = Unit.create({
+    eventEmitter:myEventEmitter, 
+    emitEvents:true
+})
+
+ unit.on('event.save', (event) => {  
+  console.log(`${event.type} ${event.data.operation}`);
+ })
+
+```
+
 ## [1.0.8] - 2024-08-11
 
 ### Added

@@ -45,6 +45,7 @@ export interface UnitProps {
   created?: Date;
   metadata?: Record<string, unknown>;
   eventEmitter?: IEventEmitter
+  emitEvents?: boolean; 
   [x: string]: unknown;
 }
 

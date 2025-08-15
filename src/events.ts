@@ -3,11 +3,22 @@
  * Smith Architecture: structured events with consciousness-first design
  */
 
+export interface EventError {
+  message: string;           // Universal: error description
+  code?: string;            // Node.js: ENOENT, EACCES, etc. / Browser: could be HTTP codes
+  path?: string;            // File operations
+  syscall?: string;         // Node.js: 'open', 'write', etc.
+  errno?: number;           // Node.js: error number
+  stack?: string;           // Debug info (optional)
+}
+
 /**
  * Base event interface - all events must have a type
  */
 export interface Event {
   type: string;
+  timestamp: Date;
+  error?: EventError;
 }
 
 /**

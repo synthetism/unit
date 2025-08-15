@@ -7,9 +7,9 @@
  * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
 
-import { Capabilities } from './capabilities.js';
-import { Schema, type ToolSchema } from './schema.js';
-import { Validator } from './validator.js';
+import { Capabilities } from '../src/capabilities.js';
+import { Schema, type ToolSchema } from '../src/schema.js';
+import { Validator } from '../src/validator.js';
 
 // Re-export consciousness classes for convenience
 export { Capabilities, Schema, Validator, type ToolSchema };

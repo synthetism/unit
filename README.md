@@ -1,6 +1,6 @@
-# (⊚) Unit Architecture 
+## (⊚) Unit Architecture 
 
-```
+```bash
    _    _       _ _                            
  | |  | |     (_) |                           
  | |  | |_ __  _| |_                          
@@ -13,433 +13,405 @@
    /_/    \_\_|  \___|_| |_|_|\__\___|\___|\__|\__,_|_|  \___|
 
 
-version: 1.0.8
-description: Where intelligent components meet intelligent development               
+version: 1.0.9
+                                                                    
 ```
-**Developer Productivity Framework for Modern Applications**
+Here's something I've been thinking about: what if your code could actually learn from other code? Not through inheritance, dependency or injection, but by literally teaching and learning capabilities ?
 
-Built for teams that ship fast, scale smart, and embrace the AI-first future
+```typescript
+const myService = EmailService.create();
+myService.learn([crypto.teach()]); // Now it can sign emails
+myService.learn([storage.teach()]); // Now it can save drafts
+
+// That's it. Your email service just learned cryptography and storage.
+```
+
+I know it sounds weird, but stick with me. This isn't another framework trying to solve everything. It's a pattern that makes software composition feel... natural.
+
+**What you get:**
+- Code that can teach and learn new things, without dependencies
+- AI-ready components (every unit works with AI tools automatically)  
+- Loose coupling that doesn't hurt
+- Systems that evolve without breaking
 
 ---
 
-## What It Is
+## The Basic Idea
 
-Unit Architecture is a **battle-tested development framework** that transforms how teams build and maintain software. Think of it as "intelligent components" that know their own capabilities and can share them seamlessly across your entire codebase.
+Every Unit can do two things:
+1. **Teach** - share what it knows with other units
+2. **Learn** - acquire new capabilities from other units
 
-**Perfect for modern teams building:**
-- **Enterprise APIs** with zero documentation debt
-- **Microservices** that discover and share capabilities automatically  
-- **Developer platforms** with plug-and-play extensibility
-- **AI-powered applications** with natural tool integration
-
-## Why Teams Choose Unit Architecture
-
-### **Productivity Multiplier**
-- **Write once, use everywhere**: Components automatically work across projects
-- **Zero documentation drift**: Code documents itself at runtime
-- **Instant capability discovery**: New developers see what's available immediately
-- **AI integration built-in**: Works with ChatGPT, Claude, and custom AI agents
-
-### **Enterprise Grade**
-- **Type-safe composition**: Catch errors at build time, not production
-- **Dependency-free core**: No framework lock-in or version conflicts
-- **Evolution tracking**: Change systems safely with full audit trails
-- **Team consistency**: One pattern to rule them all
-
-## The Enterprise Reality
-
-Every development team faces the same challenges:
-
-**The Integration Nightmare:**
 ```typescript
-// This is what most codebases look like
-class PaymentService {
+// Create some units
+const crypto = CryptoUnit.create();
+const emailer = EmailUnit.create();
+
+// Email unit learns crypto capabilities
+emailer.learn([crypto.teach()]);
+
+// Now email can do crypto stuff
+const signed = await emailer.execute('crypto.sign', message);
+```
+
+That's really it. No complex wiring, no dependency graphs to manage. Units just teach each other what they know.
+
+## A Real Example
+
+Let's say you're building a notification system. You need to send emails, encrypt sensitive data, and maybe store some logs. Here's how we got used to approach it:
+
+```typescript
+// The usual way - inject everything you might need
+class NotificationService {
   constructor(
-    private logger: Logger,           // Different logging in each service
-    private metrics: MetricsClient,   // Metrics scattered everywhere  
-    private auth: AuthService,        // Auth logic duplicated
-    private db: DatabasePool,         // Data access copy-pasted
-    private cache: RedisClient,       // Caching inconsistent
-    private email: EmailProvider,     // Email logic varies by team
-    private crypto: CryptoLibrary,    // Security patterns differ
-    // ... 47 more dependencies
+    private emailer: EmailProvider,
+    private crypto: CryptoService,
+    private logger: Logger,
+    private storage: Storage
   ) {}
   
-  // 500 lines of integration glue code
-  async processPayment() { /* everything everywhere all at once */ }
+  async sendSecureNotification(user: User, message: string) {
+    // Hope all the dependencies work together...
+  }
 }
 ```
 
-**The consequences:**
-- **Integration tax**: 60% of development time spent on glue code
-- **Knowledge silos**: Each team reinvents the same wheels
-- **Testing complexity**: Mock everything to test anything
-- **Documentation debt**: What works where? Nobody knows
-- **AI blindness**: Systems too complex for AI to understand or help with
+It's clean, it works, but you're now coupled to specific implementations, testing is a pain because you have to mock everything, and adding new capabilities means updating constructors everywhere. When it get out of control - CommandBuses, Mediators, Queries - massive cognitive, that becomes unmanagable.
 
-## The Unit Architecture Solution
-
-**What if your components could introduce themselves?**
+**Here's the Unit way:**
 
 ```typescript
-// Meet DatabaseUnit - it knows exactly what it can do
-class DatabaseUnit extends Unit<DatabaseProps> {
+// Create a unit that starts simple
+const notifier = NotificationUnit.create();
+
+// Teach it what it needs to know, when it needs to know it
+notifier.learn([
+  emailUnit.teach(),    // Now it can send emails
+  cryptoUnit.teach(),   // Now it can encrypt
+  loggerUnit.teach()    // Now it can log
+]);
+
+// Use the capabilities it learned
+await notifier.execute('email.send', user, message);
+await notifier.execute('crypto.encrypt', sensitiveData);
+```
+
+## Why This Matters
+
+**Testing gets easier.** Instead of mocking a dozen dependencies, you test units in isolation and then test the learning contracts.
+
+**AI integration is automatic.** Every unit exposes its capabilities as schemas that AI tools can understand and use immediately.
+
+**Your architecture stays flexible.** Need to swap email providers? Teach your units a different email capability. The rest of your code doesn't change.
+
+**New team members get productive faster.** They can ask any unit "what can you do?" and get a real answer.
+
+## How Units Work
+
+A Unit is just a class, a Value-Object, that follows a specific pattern:
+
+```typescript
+
+// Implementation - your Unit
+class EmailUnit extends Unit<Props> {
+  // 1. Every unit has a protected constructor
+  protected constructor(props:Props) {
+    super(props);
+  }
   
-  static create(config: { connectionString: string }) {
-    return new DatabaseUnit({
-      dna: { id: 'database', version: '1.0.8', description: 'Enterprise data persistence' },
-      connectionString: config.connectionString
+  // 2. Create through static factory
+  static create(config:Config) {
+    return new EmailUnit({
+      dna: { id: 'email', version: '1.0.0', description: 'my first unit' },
+      apiKey: config.apiKey // Immutable props
     });
   }
-
-  // Self-documenting capabilities with rich schemas
-  protected build() {
+  
+  // 3. Define what you can teach others
+  teach() {
     return {
+      unitId: this.dna.id,
       capabilities: {
-        save: (data) => this.saveRecord(data),
-        find: (id) => this.findRecord(id),
-        list: (filters) => this.listRecords(filters)
+        'send': (...args) => this.sendEmail(...args),
+        'template': (...args) => this.renderTemplate(...args)
       },
       schema: {
-        save: {
-          name: 'save',
-          description: 'Persist data with automatic validation and indexing',
-          parameters: {
-            type: 'object',
-            properties: {
-              data: { 
-                type: 'object', 
-                description: 'Record data to persist' 
-              },
-              options: {
-                type: 'object',
-                properties: {
-                  upsert: { type: 'boolean', description: 'Update if exists' },
-                  validate: { type: 'boolean', description: 'Run validation' }
-                }
-              }
-            },
-            required: ['data']
-          },
-          response: {
-            type: 'object',
-            properties: {
-              id: { type: 'string', description: 'Generated record ID' },
-              created: { type: 'boolean', description: 'Whether record was created' }
-            }
-          }
-        }
+        send: { /* describes the send method for AI */ },
+        template: { /* describes the template method for AI */ }
       }
     };
   }
+  
+  // 4. Your actual business logic
+  private async sendEmail(to: string, subject: string, body: string) {
+    // Send the email however you want
+  }
 }
-
-// Now everything just works
-const db = DatabaseUnit.create({ connectionString: 'postgres://...' });
-
-// Use it directly
-await db.execute('save', { user: 'john', email: 'john@example.com' });
-
-// Share it with other components  
-const api = APIUnit.create();
-api.learn([db.teach()]); // API instantly knows how to use database
-
-// AI understands it automatically
-const ai = AIUnit.create({ provider: 'openai' });
-ai.learn([db.teach()]);
-await ai.call("Save a new user with email admin@company.com");
-// AI automatically validates and calls db.save() with proper parameters
 ```
 
-## How Teams Transform Their Development
+That's it. Once you have units, they can teach and learn from each other.
 
-### The "Netflix Effect" - Capability Discovery
+## Getting Started
 
-```typescript
-// Three teams, three components, zero integration meetings
-const weather = WeatherUnit.create({ apiKey: 'wx_key' });
-const email = EmailUnit.create({ smtp: { host: 'smtp.gmail.com' } });
-const scheduler = SchedulerUnit.create();
-
-// Scheduler discovers and adopts capabilities
-scheduler.learn([weather.teach(), email.teach()]);
-
-// Now scheduler is a weather-enabled, email-capable service
-await scheduler.execute('weather.getCurrentWeather', 'New York');
-await scheduler.execute('email.send', { 
-  to: 'team@company.com', 
-  subject: 'Daily Weather Update' 
-});
-
-// Documentation is live and always accurate
-console.log(scheduler.help()); // Shows all available capabilities with examples
-```
-
-### The "AI Amplifier" - Natural Language to Code
-
-Your units become AI tools automatically:
-
-```typescript
-// AI becomes your universal system operator
-const ai = AIUnit.create();
-ai.learn([weather.teach(), email.teach(), database.teach()]);
-
-// Business stakeholders can literally say what they want
-await ai.call("Get weather for Tokyo", { useTools: true });
-await ai.call("Create weather report and email to stakeholders", { useTools: true });  
-await ai.call("Analyze weather data and save insights to database", { useTools: true });
-
-```
-
-## Real Impact on Your Team
-
-### **Measured Results**
-- **60% less integration code** - units compose themselves
-- **80% faster onboarding** - new developers see what's available instantly  
-- **90% fewer documentation issues** - code explains itself
-- **100% AI compatibility** - every unit becomes an AI tool automatically
-
-### **Development Velocity**
-```typescript
-// Monday: Start with basics
-const logger = LoggerUnit.create({ level: 'info' });
-
-// Tuesday: Add metrics without touching existing code
-logger.learn([metricsUnit.teach()]);
-
-// Wednesday: Add alerting capabilities  
-logger.learn([alertingUnit.teach()]);
-
-// Thursday: AI can now log, track metrics, and send alerts
-ai.learn([logger.teach()]);
-await ai.call("Log this error and alert the team if it happens again");
-```
-
-### **Infinite Composability**
-```typescript
-// Combine any units without architectural meetings
-const composedUnit = Unit.create();
-composedUnit.learn([
-  authUnit.teach(),      // Authentication
-  cryptoUnit.teach(),    // Encryption  
-  storageUnit.teach(),   // Data persistence
-  auditUnit.teach()      // Compliance logging
-]);
-
-// Now you have a secure, compliant, persistent authentication system
-// Built from independent, testable, reusable units
-```
-
-##  Dynamic Execution
-
-Type-safe execution of methods inside or outside the unit
-
-```typescript
-// Units acquire capabilities at runtime
-const crypto = CryptoUnit.create();
-const storage = StorageUnit.create(); 
-const api = APIUnit.create();
-
-// Learn multiple capabilities
-api.learn([crypto.teach(), storage.teach()]);
-
-// Now API unit can encrypt and store
-await api.execute('crypto.encrypt', data);
-await api.execute('storage.save', encryptedData);
-
-```
-
-
-### Documentation That Never Gets Stale
-```typescript
-unit.help(); // Always current, generated from actual capabilities
-unit.schema(); // Perfect for API documentation
-unit.capabilities(); // Runtime introspection
-unit.validator(); // Validation class of own schemas and capabilities
-```
-
-## Get Started in 5 Minutes
+Install the package:
 
 ```bash
 npm install @synet/unit
 ```
 
-### 1. **Create Your First Unit**
+Create your first unit:
+
 ```typescript
-import { Unit, createUnitSchema } from '@synet/unit';
+import { Unit } from '@synet/unit';
 
-class PaymentUnit extends Unit<PaymentProps> {
-  protected constructor(props: PaymentProps) {
-    super(props);
-  }
-
-  static create(config: { apiKey: string }): PaymentUnit {
-    return new PaymentUnit({
-      dna: createUnitSchema({ 
-        id: 'payment-processor', 
-        version: '1.0.8',
-        description: 'Secure payment processing with fraud detection'
-      }),
-      apiKey: config.apiKey
+class MathUnit extends Unit {
+  protected constructor(props) { super(props); }
+  
+  static create() {
+    return new MathUnit({
+      dna: { id: 'math', version: '1.0.0' }
     });
   }
 
-  protected build() {
-    return {
-      capabilities: { 
-        charge: (amount, card) => this.processCharge(amount, card),
-        refund: (transactionId) => this.processRefund(transactionId)
-      },
-      schema: {
-        charge: {
-          name: 'charge',
-          description: 'Process a payment charge with fraud detection',
-          parameters: {
-            type: 'object',
-            properties: {
-              amount: { type: 'number', description: 'Amount in cents' },
-              card: { type: 'string', description: 'Card token' }
-            },
-            required: ['amount', 'card']
-          }
+  build() {
+
+     // Unit methods as capabilities    
+     Capabilities.create(
+      unitId: this.props.dna.id,
+      {
+        'add': (a, b) => a + b,
+        'multiply': (a, b) => a * b
+     });
+
+    // Schema and AI tool 
+    Schema.create(
+      unitId: this.props.dna.id,
+      {
+        add: {
+          description: 'Add two numbers',
+          parameters: { a: 'number', b: 'number' }
         }
-      }
+      })
+    
+    // Schema and capabilities are validated on build.     
+    const validator = Validator.create({
+      unitId: this.props.dna.id,
+      capabilities,
+      schema,
+      strictMode: false
+    });
+
+    return { capabilities, schema, validator };
+  }
+  
+  // Teach any unit your capabilities, schemas and provide own validation logic
+  teach(): TeachingContract {
+    return {
+      unitId: this.props.dna.id,
+      capabilities: this._unit.capabilities,
+      schema: this._unit.schema,
+      validator: this._unit.validator
     };
   }
-  // Implement methods
-  charge();
-  refund();
 }
+// Use it
+const math = MathUnit.create();
+const calculator = CalculatorUnit.create();
+
+calculator.learn([math.teach()]);
+const result = calculator.execute('math.add', 5, 3); // 8
 ```
 
-### 2. **Use It Everywhere**
+## AI Integration
+
+This is where it gets interesting. Every unit automatically works with AI:
+
 ```typescript
-// In your API
-const payment = PaymentUnit.create({ apiKey: 'pk_...' });
-await payment.execute('charge', 2000, 'card_token');
+import { chatWithTools } from '@synet/ai';
 
-// In your admin dashboard
-const admin = AdminUnit.create();
-admin.learn([payment.teach()]);
-await admin.execute('payment-processor.refund', 'txn_123');
+// Your units become AI tools automatically
+const weather = WeatherUnit.create({ apiKey: 'your-key' });
+const email = EmailUnit.create({ apiKey: 'your-key' });
 
-// With AI assistance
-const ai = AIUnit.create({ provider: 'openai' });
-ai.learn([payment.teach()]);
-await ai.call("Process a $20 charge for customer order #1234");
+// AI can use them directly
+const response = await chatWithTools([
+  weather.teach(), 
+  email.teach()
+], "Check the weather in NYC and email me the forecast");
+
+// The AI will:
+// 1. Call weather.getCurrentWeather('NYC')  
+// 2. Call email.send('you@email.com', 'Weather Forecast', result)
 ```
 
-### 3. **Scale Across Teams**
-```typescript
-// Each team contributes their expertise
-const auth = AuthUnit.create({ provider: 'auth0' });
-const email = EmailUnit.create({ provider: 'sendgrid' });
-const storage = StorageUnit.create({ type: 's3' });
+No tool definitions to write, no schema mapping, no integration code. Units handle all of that for you.
 
-// Any team can compose a complete solution
+## Testing
+
+Testing units is straightforward because they're self-contained:
+
+```typescript
+describe('EmailUnit', () => {
+  it('should send emails', async () => {
+    const email = EmailUnit.create({ apiKey: 'test-key' });
+    const result = await email.execute('send', 'test@example.com', 'Subject', 'Body');
+    expect(result.success).toBe(true);
+  });
+  
+  it('should teach email capabilities', () => {
+    const email = EmailUnit.create({ apiKey: 'test-key' });
+    const contract = email.teach();
+    
+    expect(contract.capabilities).toHaveProperty('send');
+    expect(contract.schema.send).toBeDefined();
+  });
+});
+```
+
+Test learning between units:
+
+```typescript
+it('should learn and use capabilities', () => {
+  const crypto = CryptoUnit.create();
+  const email = EmailUnit.create({ apiKey: 'test-key' });
+  
+  email.learn([crypto.teach()]);
+  
+  expect(email.can('crypto.sign')).toBe(true);
+  expect(email.can('crypto.encrypt')).toBe(true);
+});
+```
+
+## Events and Observability
+
+Units have built-in event support for monitoring and debugging:
+
+```typescript
+const email = EmailUnit.create({ apiKey: 'your-key' });
+
+// Listen to what your units are doing
+email.on('capability.executed', (event) => {
+  console.log(`${event.unitId} executed ${event.capability} in ${event.duration}ms`);
+});
+
+email.on('error', (event) => {
+  console.log(`Error in ${event.unitId}: ${event.error.message}`);
+});
+
+// Events are emitted automatically
+await email.execute('send', 'user@example.com', 'Hello', 'World');
+// → capability.executed event fired
+```
+
+You can disable events for performance in high-volume scenarios:
+
+```typescript
+const email = EmailUnit.create({ 
+  apiKey: 'your-key',
+  emitEvents: false  // Skip events for better performance
+});
+```
+
+## Why this rocks
+
+**You stop writing glue code.** Units figure out how to work together.
+
+**Testing becomes simple.** Test units in isolation, then test the learning contracts.
+
+**AI integration is free.** Every unit works with AI tools automatically.
+
+**Self-documenting**  Just call `unit.help()` and get full documentation and available methods. Always up-to-date, close to the source, changed together.
+
+**Your architecture stays flexible.** Need to change providers? Teach your units new capabilities. The rest of your code doesn't change.
+
+## Common Patterns
+
+Here are some patterns that teams find useful:
+
+```typescript
+// Capability composition
+const api = ApiUnit.create();
+api.learn([
+  auth.teach(),        // Authentication
+  logger.teach(),      // Logging
+  metrics.teach(),     // Monitoring
+  cache.teach()        // Caching
+]);
+
+// Feature units
 const userService = UserServiceUnit.create();
-userService.learn([auth.teach(), email.teach(), storage.teach()]);
+userService.learn([
+  database.teach(),    // Data persistence
+  email.teach(),       // Notifications
+  crypto.teach()       // Password hashing
+]);
 
-// Now userService can authenticate, send emails, and store data
-// Without any team writing integration code
+// AI-powered workflows
+const assistant = AssistantUnit.create();
+assistant.learn([
+  userService.teach(), // User management
+  api.teach(),         // External APIs
+  scheduler.teach()    // Task scheduling
+  cryptoUnit.teach(),    // Encryption  
+]);
+
 ```
 
-## Enterprise-Ready Features
+## Getting Help
 
-### **Production Stability**
-- **Immutable state**: Units can't be corrupted by side effects
-- **Type-safe composition**: Catch integration errors at compile time  
-- **Graceful degradation**: Units work independently even when others fail
-- **Zero dependencies**: No supply chain vulnerabilities in core architecture
-
-### **AI-Native Development**
-
-Units speak AI natively - every unit becomes an intelligent tool:
+Every unit documents itself:
 
 ```typescript
-// Your existing units automatically work with any AI
-const agent = Agent.create({ provider: 'openai' });
-agent.learn([
-  weatherUnit.teach(),    // Weather data
-  emailUnit.teach(),      // Communications  
-  databaseUnit.teach(),   // Data persistence
-  analyticsUnit.teach()   // Business intelligence
-]);
+// Ask any unit what it can do
+console.log(myUnit.help());
 
-// Natural language business requests
-await ai.call("Analyze weather patterns for Q4 and email insights to executive emails");
+// Check if it has specific capabilities
+if (myUnit.can('crypto.sign')) {
+  await myUnit.execute('crypto.sign', data);
+}
 
-// AI orchestrates your entire system:
-// 1. Queries weather data for date range
-// 2. Runs analytics on the dataset  
-// 3. Generates executive summary
-// 4. Sends formatted email to stakeholder list
+// See what it's learned
+console.log(myUnit.capabilities().list());
 ```
 
-### **Business Impact**
+The documentation is always up-to-date because it's generated from the actual running code.
 
-**For Engineering Teams:**
-- Reduce integration complexity by 70%
-- Increase development velocity by 50%  
-- Eliminate documentation maintenance overhead
-- Enable true cross-team code reuse
+## Enterprise Adoption
 
-**For Product Teams:**
-- Rapid feature composition from existing capabilities
-- AI-assisted product development and testing
-- Self-documenting APIs that stakeholders can understand
-- Faster time-to-market for new features
+While Unit Architecture started as a developer productivity pattern, many teams are finding it valuable for enterprise-scale applications:
 
-**For Leadership:**
-- Reduced technical debt accumulation
-- Improved developer productivity metrics
-- Lower maintenance costs over time
-- Future-proof architecture that scales with AI advancement 
+**Benefits for teams :**
 
-## Ready to Transform Your Development?
+- Faster integration between teams (no more "integration meetings")
+- Better AI tooling adoption (every component works with AI immediately)
+- Easier testing and maintenance (units are self-contained)
+- Reduced vendor lock-in (swap implementations by teaching new capabilities)
+- Less type-battles. Schemas allow validation.
 
-### **Best Practices for Success**
-- **Start small**: Convert one complex integration to units
-- **Think capabilities**: What does this component know how to do well?
-- **Design for AI**: Write schemas that can be used in tool calling
-- **Share early**: Let other teams discover and adopt your units
-- **Evolve safely**: Use unit evolution to upgrade systems without breaking changes
-
-### **Real-World Applications**
-
-**E-commerce Platform:**
+**Common enterprise patterns:**
 ```typescript
-const checkout = CheckoutUnit.create();
-checkout.learn([
-  paymentUnit.teach(),     // Process transactions
-  inventoryUnit.teach(),   // Check stock levels  
-  shippingUnit.teach(),    // Calculate delivery
-  emailUnit.teach(),       // Send confirmations
-  analyticsUnit.teach()    // Track conversions
+// Multi-provider support
+const storage = StorageUnit.create();
+storage.learn([
+  awsS3.teach(),     // Primary storage
+  azureBlob.teach(), // Backup storage
+  gcs.teach()        // Archive storage
 ]);
 
-// AI can now: "Process order for customer X with expedited shipping"
-```
-
-**DevOps Pipeline:**
-```typescript  
-const deployment = DeploymentUnit.create();
-deployment.learn([
-  dockerUnit.teach(),      // Container management
-  kubernetesUnit.teach(),  // Orchestration
-  monitoringUnit.teach(),  // Health checks
-  slackUnit.teach()        // Team notifications
-  loggerUnit.teach()       // Remote logging
+// Compliance and audit trails
+const processor = ProcessorUnit.create();
+processor.learn([
+  auditLogger.teach(),    // Track all operations
+  encryptionUnit.teach(), // Encrypt sensitive data
+  validatorUnit.teach()   // Ensure data quality
 ]);
-
-// AI can now: "Deploy v2.1.0 to staging and notify the team"
 ```
 
-### **Learn More**
-
-- **[Architecture Guide](./DOCTRINE.md)** - Deep dive into Unit principles
-- **[Example Projects](./examples/)** - Real implementations to study
-- **[Community](https://github.com/synthetism/unit)** - Join the discussion
+If you're evaluating Unit Architecture for enterprise use, the [DOCTRINE.md](./DOCTRINE.md) file contains the complete architectural principles and patterns.
 
 ---
 
+**Questions? Issues? Ideas?**  
+[Technical documentation](./TECHNICAL.md) | 
+[GitHub Issues](https://github.com/synthetism/unit/issues) | [Documentation](./DOCTRINE.md) | [Examples](./examples/)
+[Email me](anton@synthetism.ai)
