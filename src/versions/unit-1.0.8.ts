@@ -1,21 +1,18 @@
 /**
- * Unit Architecture Interface for @synet/unit v1.0.9
- * Smith Architecture: Built-in event support with consciousness-first design
+ * Unit Architecture Interface for @synet/unit v1.0.7
+ *
  * 
  * @author 0en
- * @version 1.0.9
+ * @version 1.0.8
  * @license [MIT](https://github.com/synthetism/synet/blob/main/LICENSE)
  */
 
 import { Capabilities } from './capabilities.js';
 import { Schema, type ToolSchema } from './schema.js';
 import { Validator } from './validator.js';
-import type { Event, IEventEmitter } from './events.js';
-import { EventEmitter } from './events.js';
+
 // Re-export consciousness classes for convenience
 export { Capabilities, Schema, Validator, type ToolSchema };
-export  { EventEmitter, type Event, type IEventEmitter };
-
 
 /**
  * Unit metadata interface - extensible metadata for capability contracts
@@ -44,7 +41,6 @@ export interface UnitProps {
   dna: UnitSchema;  
   created?: Date;
   metadata?: Record<string, unknown>;
-  eventEmitter?: IEventEmitter
   [x: string]: unknown;
 }
 
@@ -71,9 +67,6 @@ export interface TeachingContract {
   /** Validator consciousness unit */
   validator: Validator;
 }
-
-
-
 
 /**
  * Core Unit interface - all units must implement this
@@ -150,11 +143,32 @@ export abstract class ValueObject<T> {
 }
 
 /**
- * Base IUnit implementation 
+ * Base implementation for units using dynamic capabilities pattern
+ *
+ * CRITICAL: Units must use a private constructor + static create() pattern
+ * This prevents direct instantiation and ensures proper validation/lifecycle
+ *
+ * ERROR HANDLING STRATEGY:
+ * - Simple operations (CRUD, getters): Use exceptions (throw new Error)
+ * - Complex operations (creation, auth): Use Result<T> pattern from @synet/patterns
+ * - See error-strategy.md for detailed guidelines
+ *
+ * Example:
+ * ```typescript
+ * class MyUnit extends Unit {
+ *   private constructor(data: MyData) {
+ *     super(createUnitSchema({ id: 'my-unit', version: '1.0.0' }));
+ *     // Setup capabilities...
+ *   }
+ *
+ *   static create(data: MyData): MyUnit {
+ *     return new MyUnit(data);
+ *   }
+ * }
+ * ```
  */
 export abstract class Unit<T extends UnitProps> extends ValueObject<T> implements IUnit {
   protected readonly _unit: UnitCore;
-  private readonly _defaultEvents: EventEmitter;
 
   /**
    * Protected constructor - prevents direct instantiation
@@ -164,12 +178,9 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
     super(props);
     this._unit = this.build();
     
-    // Initialize default event emitter if not provided
-    this._defaultEvents = new EventEmitter();
-    
     // Validate consciousness integrity immediately
     if (!this._unit.validator.isValid()) {
-      throw new Error(`[${this.dna.id}] Build failed. Capabilities must match Schemas`);
+      throw new Error(`[${this.dna.id}] Invalid consciousness architecture`);
     }
   }
 
@@ -225,67 +236,6 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    */
   getSchema(tool: string): ToolSchema | undefined {
     return this._unit.schema.get(tool);
-  }
-
-  // Event methods - Choice Architecture pattern
-  // Default to MemoryEventEmitter, allow injection via props.eventEmitter
-
-  /**
-   * Emit an event using configured or default event emitter
-   */
-  protected emit(event: Event): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.emit(event);
-  }
-  
-  /**
-   * Subscribe to events of a specific type
-   * Returns unsubscribe function for cleanup
-   */
-  on<E extends Event>(type: string, handler: (event: E) => void): () => void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.on(type, handler);
-  }
-  
-  /**
-   * Subscribe to a single event occurrence
-   * Returns unsubscribe function for cleanup
-   */
-  once<E extends Event>(type: string, handler: (event: E) => void): () => void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.once(type, handler);
-  }
-  
-  /**
-   * Remove all handlers for a specific event type
-   */
-  off(type: string): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.off(type);
-  }
-
-  /**
-   * Remove all event listeners
-   */
-  removeAllListeners(): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.removeAllListeners();
-  }
-
-  /**
-   * Get count of handlers for an event type
-   */
-  listenerCount(type: string): number {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.listenerCount(type);
-  }
-
-  /**
-   * Get all active event types
-   */
-  eventTypes(): string[] {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.eventTypes();
   }
 
   // Evolution with consciousness trinity
