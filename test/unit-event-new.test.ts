@@ -4,7 +4,7 @@
  */
 
 import { describe, test, expect } from 'vitest';
-import { Unit, createUnitSchema, type UnitProps, type Event, type EventEmitter, MemoryEventEmitter } from '../src/unit.js';
+import { Unit, createUnitSchema, type UnitProps, type Event, type IEventEmitter, EventEmitter } from '../src/unit.js';
 import { Capabilities } from '../src/capabilities.js';
 import { Schema } from '../src/schema.js';
 import { Validator } from '../src/validator.js';
@@ -111,8 +111,8 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     const unit = TestUnit.create('test');
     
     expect(unit.whoami()).toBe('TestUnit(test)');
-    expect(unit.eventTypes()).toEqual([]);
-    expect(unit.listenerCount('test.event')).toBe(0);
+    expect(unit.events().eventTypes()).toEqual([]);
+    expect(unit.events().listenerCount('test.event')).toBe(0);
   });
 
   test('should emit and handle events using default emitter', () => {
@@ -130,12 +130,12 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     expect(events).toHaveLength(1);
     expect(events[0].type).toBe('test.event');
     expect(events[0].data).toBe('hello world');
-    expect(unit.listenerCount('test.event')).toBe(1);
-    expect(unit.eventTypes()).toContain('test.event');
+    expect(unit.events().listenerCount('test.event')).toBe(1);
+    expect(unit.events().eventTypes()).toContain('test.event');
 
     // Clean up
     unsubscribe();
-    expect(unit.listenerCount('test.event')).toBe(0);
+    expect(unit.events().listenerCount('test.event')).toBe(0);
   });
 
   test('should handle multiple event types', async () => {
@@ -155,8 +155,8 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     expect(processEvents).toHaveLength(1);
     expect(processEvents[0].result).toBe(5); // 'hello'.length
     
-    expect(unit.eventTypes()).toContain('test.event');
-    expect(unit.eventTypes()).toContain('process.complete');
+    expect(unit.events().eventTypes()).toContain('test.event');
+    expect(unit.events().eventTypes()).toContain('process.complete');
   });
 
   test('should support once() for single event handling', () => {
@@ -176,7 +176,7 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     // Should only receive the first event
     expect(events).toHaveLength(1);
     expect(events[0].data).toBe('first');
-    expect(unit.listenerCount('test.event')).toBe(0);
+    expect(unit.events().listenerCount('test.event')).toBe(0);
   });
 
   test('should support off() for removing all handlers of a type', () => {
@@ -187,13 +187,13 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     unit.on<TestEvent>('test.event', (event) => events.push(event));
     unit.on<TestEvent>('test.event', (event) => events.push({ ...event, data: 'handler2' }));
     
-    expect(unit.listenerCount('test.event')).toBe(2);
+    expect(unit.events().listenerCount('test.event')).toBe(2);
     
     // Remove all handlers for the type
     unit.off('test.event');
-    
-    expect(unit.listenerCount('test.event')).toBe(0);
-    
+
+    expect(unit.events().listenerCount('test.event')).toBe(0);
+
     // Emit should not trigger handlers
     unit.emitTestEvent('after off');
     expect(events).toHaveLength(0);
@@ -206,19 +206,19 @@ describe('Unit@1.0.9 Event Architecture - Smith Pattern', () => {
     unit.on<TestEvent>('test.event', () => {});
     unit.on<ProcessEvent>('process.complete', () => {});
     unit.on('custom.event', () => {});
-    
-    expect(unit.eventTypes()).toHaveLength(3);
-    
+
+    expect(unit.events().eventTypes()).toHaveLength(3);
+
     // Clear all listeners
-    unit.removeAllListeners();
-    
-    expect(unit.eventTypes()).toHaveLength(0);
-    expect(unit.listenerCount('test.event')).toBe(0);
-    expect(unit.listenerCount('process.complete')).toBe(0);
+    unit.events().removeAllListeners();
+
+    expect(unit.events().eventTypes()).toHaveLength(0);
+    expect(unit.events().listenerCount('test.event')).toBe(0);
+    expect(unit.events().listenerCount('process.complete')).toBe(0);
   });
 
   test('should support custom EventEmitter injection', () => {
-    const customEmitter = new MemoryEventEmitter();
+    const customEmitter = new EventEmitter();
     const events: TestEvent[] = [];
     
     // Track events on custom emitter
@@ -290,7 +290,7 @@ describe('Event Architecture - Agent Intelligence Integration', () => {
     // Check that agent reacted to large result
     expect(reactionEvents).toHaveLength(1);
     expect(reactionEvents[0].data).toBe('Large result detected: 18');
-    expect(unit.eventTypes()).toContain('test.event');
+    expect(unit.events().eventTypes()).toContain('test.event');
   });
 
   test('should support structured event interfaces for type safety', () => {
@@ -379,7 +379,7 @@ describe('Event Architecture - Smith Protocol Integration', () => {
     expect(monitorAlerts).toHaveLength(2);
     expect(monitorAlerts[0].threshold).toBe('low');  // 9 <= 10
     expect(monitorAlerts[1].threshold).toBe('high'); // 26 > 10
-    expect(monitor.eventTypes()).toContain('monitor.alert');
+    expect(monitor.events().eventTypes()).toContain('monitor.alert');
   });
   });
 
@@ -388,14 +388,14 @@ describe('Event Architecture - Smith Protocol Integration', () => {
     const unit = TestUnit.create('zero-deps');
     
     // Verify it has built-in event capabilities
-    expect(unit.eventTypes).toBeDefined();
+    expect(unit.events().eventTypes()).toBeDefined();
     expect(unit.on).toBeDefined();
     expect(unit.emitEvent).toBeDefined(); // Use public method
     expect(unit.off).toBeDefined();
     expect(unit.once).toBeDefined();
-    expect(unit.removeAllListeners).toBeDefined();
-    expect(unit.listenerCount).toBeDefined();
-    
+    expect(unit.events()).toBeDefined();
+    expect(unit.events().listenerCount).toBeDefined();
+
     // All should work without any external event libraries
     const events: TestEvent[] = [];
     unit.on<TestEvent>('test.event', (event) => events.push(event));

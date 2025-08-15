@@ -78,6 +78,7 @@ export interface TeachingContract {
 /**
  * Core Unit interface - all units must implement this
  * Updated for consciousness trinity architecture v1.0.7
+ * Enhanced with event consciousness in v1.0.9 
  */
 export interface IUnit {
   /** Get unit identity as string */
@@ -121,6 +122,20 @@ export interface IUnit {
 
   /** Get specific tool schema */
   getSchema(tool: string): ToolSchema | undefined;
+
+  
+  /** Get event emitter instance - opinionated default */
+  events(): IEventEmitter;
+
+  /** Subscribe to events of a specific type */
+  on<E extends Event>(type: string, handler: (event: E) => void): () => void;
+
+  /** Subscribe to a single event occurrence */
+  once<E extends Event>(type: string, handler: (event: E) => void): () => void;
+
+  /** Remove all handlers for a specific event type */
+  off(type: string): void;
+
 }
 
 /**
@@ -154,7 +169,7 @@ export abstract class ValueObject<T> {
  */
 export abstract class Unit<T extends UnitProps> extends ValueObject<T> implements IUnit {
   protected readonly _unit: UnitCore;
-  private readonly _defaultEvents: EventEmitter;
+  private readonly _events: EventEmitter;
 
   /**
    * Protected constructor - prevents direct instantiation
@@ -164,8 +179,8 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
     super(props);
     this._unit = this.build();
     
-    // Initialize default event emitter if not provided
-    this._defaultEvents = new EventEmitter();
+    // Initialize event consciousness - opinionated default, not choice
+    this._events = new EventEmitter();
     
     // Validate consciousness integrity immediately
     if (!this._unit.validator.isValid()) {
@@ -227,15 +242,22 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
     return this._unit.schema.get(tool);
   }
 
-  // Event methods - Choice Architecture pattern
-  // Default to MemoryEventEmitter, allow injection via props.eventEmitter
+  // Event consciousness methods - Smith Architecture v1.0.9
+  // Opinionated default, subtle choice, architectural coherence
 
   /**
-   * Emit an event using configured or default event emitter
+   * Get event emitter instance - Smith's choice: opinionated default over choice paralysis
+   * Returns injected emitter or standard consciousness event stream
+   */
+  events(): IEventEmitter {
+    return this.props.eventEmitter || this._events;
+  }
+
+  /**
+   * Emit an event using consciousness event stream
    */
   protected emit(event: Event): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.emit(event);
+    this.events().emit(event);
   }
   
   /**
@@ -243,8 +265,7 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    * Returns unsubscribe function for cleanup
    */
   on<E extends Event>(type: string, handler: (event: E) => void): () => void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.on(type, handler);
+    return this.events().on(type, handler);
   }
   
   /**
@@ -252,41 +273,16 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
    * Returns unsubscribe function for cleanup
    */
   once<E extends Event>(type: string, handler: (event: E) => void): () => void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.once(type, handler);
+    return this.events().once(type, handler);
   }
   
   /**
    * Remove all handlers for a specific event type
    */
   off(type: string): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.off(type);
+    this.events().off(type);
   }
 
-  /**
-   * Remove all event listeners
-   */
-  removeAllListeners(): void {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    emitter.removeAllListeners();
-  }
-
-  /**
-   * Get count of handlers for an event type
-   */
-  listenerCount(type: string): number {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.listenerCount(type);
-  }
-
-  /**
-   * Get all active event types
-   */
-  eventTypes(): string[] {
-    const emitter = this.props.eventEmitter || this._defaultEvents;
-    return emitter.eventTypes();
-  }
 
   // Evolution with consciousness trinity
   evolve(
