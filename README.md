@@ -14,7 +14,7 @@
 
 
 version: 1.0.9
-                                                                    
+                                                              
 ```
 Here's something I've been thinking about: what if your code could actually learn from other code? Not through inheritance, dependency or injection, but by literally teaching and learning capabilities ?
 

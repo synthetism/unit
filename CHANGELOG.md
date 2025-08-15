@@ -1,7 +1,7 @@
 # Changelog
 
 
-## [1.0.8] - 2024-08-15
+## [1.0.9] - 2024-08-15
 
 ### EVENT EMITTER
 
@@ -24,7 +24,7 @@ Now you can:
 
 ```
 
-**Works with all new Units@1.0.9, no config needed**
+**Works with all new units@1.0.9, no config needed**
 
 
 #### Interface: 
