@@ -98,12 +98,45 @@ export class EventEmitter<TEvent extends Event = Event>
 
   /**
    * Emit an event to all subscribed handlers
+   * Enhanced to support wildcard matching
    */
   emit(event: TEvent): void {
-    const handlers = this.observers.get(event.type) || [];
-    for (const handler of handlers) {
+    // Emit to exact type handlers
+    const exactHandlers = this.observers.get(event.type) || [];
+    for (const handler of exactHandlers) {
       handler(event);
     }
+
+    // Emit to wildcard handlers (*) 
+    const wildcardHandlers = this.observers.get('*') || [];
+    for (const handler of wildcardHandlers) {
+      handler(event);
+    }
+
+    // Emit to pattern handlers (source.*)
+    for (const [pattern, handlers] of this.observers.entries()) {
+      if (pattern !== event.type && pattern !== '*' && this.matchesPattern(event.type, pattern)) {
+        for (const handler of handlers) {
+          handler(event);
+        }
+      }
+    }
+  }
+
+  /**
+   * Check if an event type matches a pattern
+   * Supports patterns like "weather.*", "*.error", etc.
+   */
+  private matchesPattern(eventType: string, pattern: string): boolean {
+    if (!pattern.includes('*')) return false;
+    
+    // Convert pattern to regex
+    const regexPattern = pattern
+      .replace(/\./g, '\\.')     // Escape dots
+      .replace(/\*/g, '[^.]*');  // * matches anything except dots
+    
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(eventType);
   }
 
   /**

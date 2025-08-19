@@ -1,6 +1,19 @@
 # Changelog
 
 
+## [1.1.0] - 2024-08-15
+
+
+### Added
+
+Enhanced support for event wildcards like "weather.*", "*.error", etc.
+
+```typescript
+ unit.on('unit.*', (event) => {})
+ unit.on('*.error', (event) => {})
+
+```
+
 ## [1.0.9] - 2024-08-15
 
 ### EVENT EMITTER

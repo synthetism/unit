@@ -290,9 +290,24 @@ Units have built-in event support for monitoring and debugging:
 const email = EmailUnit.create({ apiKey: 'your-key' });
 
 // Listen to what your units are doing
-email.on('capability.executed', (event) => {
+email.on('email.send', (event) => {
   console.log(`${event.unitId} executed ${event.capability} in ${event.duration}ms`);
 });
+
+// get all events 
+email.on('*', (event) => {
+  console.log(`${event.type} emitted`);
+  if(event.error) {
+      console.log(`${event.type} error: ${event.error.message}`);
+  }  
+});
+
+
+// Use wildcards to all or certain event types, like unit.*, *.error etc.
+email.on('email.*', (event) => {
+  console.log(`${event.unitId} executed ${event.capability} in ${event.duration}ms`);
+});
+
 
 email.on('error', (event) => {
   console.log(`Error in ${event.unitId}: ${event.error.message}`);
