@@ -257,7 +257,7 @@ export abstract class Unit<T extends UnitProps> extends ValueObject<T> implement
   /**
    * Emit an event using consciousness event stream
    */
-  protected emit(event: Event): void {
+  protected emit<E extends Event>(event: E): void {
     this.events().emit(event);
   }
   

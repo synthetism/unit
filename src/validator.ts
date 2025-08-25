@@ -1,5 +1,5 @@
 /**
- * Validator consciousness unit for Unit Architecture v1.0.7
+ * Validator consciousness unit for Unit Architecture 
  * 
  * Manages unit validation as a first-class consciousness component.
  * Provides validation for capabilities, schemas, and their consistency.
@@ -103,26 +103,31 @@ export class Validator {
 
   /**
    * Check if validator state is valid
+   * 
+   * v1.1.1 ENHANCEMENT: Supports schema-optional units (YAGNI principle)
+   * - Tool units: Strict schema matching (teachable capabilities)
+   * - Orchestrator units: Schema-optional (internal capabilities)
+   * - Mixed units: Partial schema coverage allowed
    */
   isValid(): boolean {
     try {
-      // Check capabilities match schemas
       const capabilities = this.capabilities.list();
       const schemas = this.schema.list();
       
-      // Every capability should have corresponding schema
-      for (const capName of capabilities) {
-        if (!schemas.includes(capName)) {
-          return false;
-        }
+      // Empty schemas always valid (Orchestrator pattern)
+      if (schemas.length === 0) {
+        return true;
       }
       
-      // Every schema should have corresponding capability
+      // Every schema must have corresponding capability (no orphan schemas)
       for (const schemaName of schemas) {
         if (!capabilities.includes(schemaName)) {
           return false;
         }
       }
+      
+      // SCHEMA OPTIONAL: Capabilities without schemas are allowed
+      // This enables YAGNI principle - only schema capabilities intended for teaching
       
       return true;
     } catch {
@@ -209,12 +214,60 @@ export class Validator {
   }
 
   /**
-   * Get validation help
+   * Get validation help with schema coverage analysis
    */
   help(): void {
-    console.log('Validator Help:');
-    console.log('Capabilities:', this.capabilities.list());
-    console.log('Schemas:', this.schema.list());
-    console.log('Validation Status:', this.isValid() ? 'Valid' : 'Invalid');
+    const capabilities = this.capabilities.list();
+    const schemas = this.schema.list();
+    const coverage = this.getSchemaCoverage();
+    
+    console.log(`Validator Help for Unit: ${this.unitId}`);
+    console.log(`Capabilities (${capabilities.length}):`, capabilities);
+    console.log(`Schemas (${schemas.length}):`, schemas);
+    console.log(`Schema Coverage: ${coverage.percentage}% (${coverage.covered}/${coverage.total})`);
+    console.log(`Unit Pattern: ${coverage.pattern}`);
+    console.log(`Validation Status: ${this.isValid() ? 'Valid' : 'Invalid'}`);
+    
+    if (coverage.uncovered.length > 0) {
+      console.log('Capabilities without schemas:', coverage.uncovered);
+      console.log('Note: Schema-optional capabilities are valid (YAGNI principle)');
+    }
+  }
+
+  /**
+   * Analyze schema coverage and unit pattern
+   */
+  private getSchemaCoverage(): {
+    total: number;
+    covered: number;
+    percentage: number;
+    uncovered: string[];
+    pattern: 'Tool' | 'Orchestrator' | 'Mixed';
+  } {
+    const capabilities = this.capabilities.list();
+    const schemas = this.schema.list();
+    const covered = capabilities.filter(cap => schemas.includes(cap));
+    const uncovered = capabilities.filter(cap => !schemas.includes(cap));
+    
+    const percentage = capabilities.length > 0 
+      ? Math.round((covered.length / capabilities.length) * 100)
+      : 100;
+      
+    let pattern: 'Tool' | 'Orchestrator' | 'Mixed';
+    if (schemas.length === 0) {
+      pattern = 'Orchestrator';
+    } else if (covered.length === capabilities.length) {
+      pattern = 'Tool';
+    } else {
+      pattern = 'Mixed';
+    }
+    
+    return {
+      total: capabilities.length,
+      covered: covered.length,
+      percentage,
+      uncovered,
+      pattern
+    };
   }
 }

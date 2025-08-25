@@ -1,5 +1,5 @@
 /**
- * Schema consciousness unit for Unit Architecture v1.0.7
+ * Schema consciousness unit for Unit Architecture
  * 
  * Manages unit schemas as a first-class consciousness component.
  * Schemas define the structure and validation rules for unit capabilities.
@@ -12,34 +12,38 @@ import type { TeachingContract } from './unit.js';
 
 /**
  * Tool Schema interface - defines parameter structure for tool calling
- * Enhanced in v1.0.7 with response validation
+ * Enhanced in v1.1.1 with response validation
  */
 export interface ToolSchema {
-  /** Tool name - must match capability key */
   name: string;
-  /** Human-readable description of what this tool does */
   description: string;
-  /** Parameter structure following JSON Schema specification */
   parameters: {
     type: 'object';
-    properties: Record<string, {
-      type: 'string' | 'number' | 'boolean' | 'object' | 'array';
-      description: string;
-      enum?: string[];
-    }>;
+    properties: Record<string, PropertySchema>;
     required?: string[];
   };
-  /** Response structure (NEW in v1.0.7) */
   response?: {
     type: 'object' | 'string' | 'number' | 'boolean' | 'array' | 'void';
-    properties?: Record<string, {
-      type: string;
-      description: string;
-      items?: { type: string; description?: string };
-      enum?: string[];
-    }>;
+    properties?: Record<string, ResponsePropertySchema>;
     required?: string[];
   };
+}
+
+interface PropertySchema {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  description: string;
+  properties?: Record<string, PropertySchema>; // Recursive nesting
+  items?: PropertySchema; // For arrays
+  enum?: string[];
+  required?: string[]; // For nested objects
+}
+
+interface ResponsePropertySchema {
+  type: string;
+  description?: string; // Optional for responses
+  properties?: Record<string, ResponsePropertySchema>;
+  items?: ResponsePropertySchema;
+  enum?: string[];
 }
 
 /**
