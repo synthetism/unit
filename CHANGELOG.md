@@ -1,5 +1,50 @@
 # Changelog
 
+## [1.1.1] - 2025-08-22
+
+### Added
+
+**Enhanced Event Emission with Generic Type Support**
+- Enhanced `emit<T extends TEvent = TEvent>(event: T): void` with generic support for better type safety
+- Events now maintain type information through the emission process
+- Improved IntelliSense and compile-time checking for event handling
+
+**Advanced Schema Types with Recursive Nesting**
+- New `PropertySchema` interface with recursive property support for complex nested objects
+- New `ResponsePropertySchema` interface optimized for API responses (optional descriptions)
+- Support for array item schemas, enums, and nested required field validation
+- Better schema validation for complex data structures
+
+```typescript
+interface PropertySchema {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array';
+  description: string;
+  properties?: Record<string, PropertySchema>; // Recursive nesting
+  items?: PropertySchema; // For arrays
+  enum?: string[];
+  required?: string[]; // For nested objects
+}
+
+interface ResponsePropertySchema {
+  type: string;
+  description?: string; // Optional for responses
+  properties?: Record<string, ResponsePropertySchema>;
+  items?: ResponsePropertySchema;
+  enum?: string[];
+}
+```
+
+**Schema Optional Validation (YAGNI Principle)**
+- Validator now supports schema-optional units following YAGNI principle
+- Tool units: Require schemas for teachable capabilities
+- Orchestrator units: Allow empty schemas for internal operations
+- Mixed units: Partial schema coverage permitted
+- Enhanced validation patterns with better error messages
+
+### Enhanced
+- Improved validator with better schema coverage analysis
+- Better error messages for capability and schema mismatches
+- Enhanced help documentation for validation patterns
 
 ## [1.1.0] - 2024-08-15
 

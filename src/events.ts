@@ -1,11 +1,10 @@
 /**
  * Event interfaces for Unit Architecture v1.0.9
- * Smith Architecture: structured events with consciousness-first design
  */
 
 export interface EventError {
   message: string;           // Universal: error description
-  code?: string;            // Node.js: ENOENT, EACCES, etc. / Browser: could be HTTP codes
+  code?: string;            // Node.js: ENOENT, EACCES, etc. / Browser: HTTP codes
   path?: string;            // File operations
   syscall?: string;         // Node.js: 'open', 'write', etc.
   errno?: number;           // Node.js: error number
@@ -29,7 +28,7 @@ export interface IEventEmitter<TEvent extends Event = Event> {
   on<T extends TEvent>(type: string, handler: (event: T) => void): () => void;
   once<T extends TEvent>(type: string, handler: (event: T) => void): () => void;
   off(type: string): void;
-  emit(event: TEvent): void;
+  emit<T extends TEvent = TEvent>(event: T): void;  // Enhanced with generic support
   removeAllListeners(): void;
   listenerCount(type: string): number;
   eventTypes(): string[];
@@ -98,9 +97,9 @@ export class EventEmitter<TEvent extends Event = Event>
 
   /**
    * Emit an event to all subscribed handlers
-   * Enhanced to support wildcard matching
+   * Enhanced to support wildcard matching and explicit type safety
    */
-  emit(event: TEvent): void {
+  emit<T extends TEvent = TEvent>(event: T): void {
     // Emit to exact type handlers
     const exactHandlers = this.observers.get(event.type) || [];
     for (const handler of exactHandlers) {
